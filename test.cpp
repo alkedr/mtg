@@ -13,10 +13,10 @@
 static void print_sizes()
 {
 	std::cout << "sizeof(Game): " << sizeof(Game) << std::endl;
-	std::cout << "sizeof(Turn): " << sizeof(Turn) << std::endl;
-	std::cout << "sizeof(Player): " << sizeof(Player) << std::endl;
-	std::cout << "sizeof(Stack): " << sizeof(Stack) << std::endl;
-	std::cout << "sizeof(Card): " << sizeof(Card) << std::endl;
+	std::cout << "sizeof(Game::Turn): " << sizeof(Game::Turn) << std::endl;
+	std::cout << "sizeof(Game::Player): " << sizeof(Game::Player) << std::endl;
+	std::cout << "sizeof(Game::Stack): " << sizeof(Game::Stack) << std::endl;
+	std::cout << "sizeof(Game::Card): " << sizeof(Game::Card) << std::endl;
 }
 
 static void test_simple()
@@ -39,16 +39,16 @@ static void test_simple()
 	game.playCardFromHand(0, 5);
 
 	game.tap(0, 5);
-	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Color::WHITE, (short)1) );
+	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Game::Color::WHITE, (short)1) );
 
 	game.playCardFromHand(0, 1);
 
 	game.tap(0, 1); 
-	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)1) );
+	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Game::Color::GREEN, (short)1) );
 
 	game.playCardFromHand(0, 0); 
-	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Color::WHITE, (short)0) );
-	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)0) ); 
+	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Game::Color::WHITE, (short)0) );
+	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Game::Color::GREEN, (short)0) ); 
 
 	game.pass(0);
 	game.pass(1);

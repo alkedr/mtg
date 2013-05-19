@@ -22,6 +22,11 @@ public:
 };
 
 
+class Game {
+
+	public:
+
+
 enum Color : unsigned char {
 	  COLORLESS = 0
 	, WHITE = (1 << 0)
@@ -73,8 +78,6 @@ class Player;
 
 typedef unsigned char PlayerId;
 
-
-class Game;
 
 
 class Card {
@@ -200,7 +203,6 @@ public:
 typedef unsigned char TeamId;
 
 
-class Game;
 
 class Stack {
 
@@ -351,7 +353,6 @@ public:
 typedef size_t CardInGameId;
 
 
-class Game {
 
 	bool allPlayersPassed() const {
 		return std::all_of(
@@ -483,7 +484,6 @@ public:
 		}
 	}
 
-};
 
 
 
@@ -534,7 +534,7 @@ public:
 
 
 #define CARD_BEGIN(BASE, ID, NAME, DESCRIPTION)                                                           \
-template<> class CardHelper<ID> : public BASE {                                                              \
+template<> class Game::CardHelper<ID> : public BASE {                                                              \
 public:                                                                                                               \
 	CardHelper<ID>(Game & game, PlayerId & ownerId)                                    \
 	: BASE(game, ownerId) {}                                                                           \
@@ -691,34 +691,46 @@ public:
 };
 
 
-CARD_BEGIN(Land,  40, "Plains", "Plains")
+
+
+#define CARD(Z, ID, DATA) case(DATA+ID): { return std::move(std::unique_ptr<Game::Card>(new Game::CardHelper<DATA+ID>(game, ownerId))); }
+
+
+
+};
+
+
+
+
+
+CARD_BEGIN(Game::Land,  40, "Plains", "Plains")
 	AFTER_TAP { owner().manaPool.add(Color::WHITE); }
 CARD_END
 
 
-CARD_BEGIN(Land, 258, "Island", "Island")
+CARD_BEGIN(Game::Land, 258, "Island", "Island")
 	AFTER_TAP { owner().manaPool.add(Color::BLUE); }
 CARD_END
 
 
-CARD_BEGIN(Land,  78, "Swamp", "Swamp")
+CARD_BEGIN(Game::Land,  78, "Swamp", "Swamp")
 	AFTER_TAP { owner().manaPool.add(Color::BLACK); }
 CARD_END
 
 
-CARD_BEGIN(Land,  77, "Mountain", "Mountain")
+CARD_BEGIN(Game::Land,  77, "Mountain", "Mountain")
 	AFTER_TAP { owner().manaPool.add(Color::RED); }
 CARD_END
 
 
-CARD_BEGIN(Land, 273, "Forest", "Forest")
+CARD_BEGIN(Game::Land, 273, "Forest", "Forest")
 	AFTER_TAP { owner().manaPool.add(Color::GREEN); }
 CARD_END
 
 
 
 
-CARD_BEGIN(Creature, 268, "Grizzly Bears", "")
+CARD_BEGIN(Game::Creature, 268, "Grizzly Bears", "")
 	POWER(2)
 	TOUGHNESS(2)
 	virtual Cost getCost() const {
@@ -736,13 +748,10 @@ CARD_END
 
 
 
-#define CARD(Z, ID, DATA) case(DATA+ID): { return std::move(std::unique_ptr<Card>(new CardHelper<DATA+ID>(game, ownerId))); }
-
-
-static std::unique_ptr<Card> newCard(const Card::Id cardId, Game & game, PlayerId ownerId) {
+std::unique_ptr<Game::Card> Game::newCard(const Game::Card::Id cardId, Game & game, Game::PlayerId ownerId) {
 	switch (cardId) {
 		BOOST_PP_REPEAT(255, CARD, 0)
 		BOOST_PP_REPEAT(255, CARD, 255)
-		default: { return std::move(std::unique_ptr<Card>(new CardHelper<0>(game, ownerId))); }
+		default: { return std::move(std::unique_ptr<Game::Card>(new Game::CardHelper<0>(game, ownerId))); }
 	}
 }

@@ -13,26 +13,26 @@ class CardWidget : public QWidget
     QPixmap source_;
     QPixmap current_;
 
-	CardInGameId cardInGameId;
+	Game::CardInGameId cardInGameId;
 
 public:
 
 	CardWidget()
-	: cardInGameId((CardInGameId)-1)
+	: cardInGameId((Game::CardInGameId)-1)
 	{
 	}
 
-	CardWidget(CardInGameId _cardInGameId, const Card & card)
+	CardWidget(Game::CardInGameId _cardInGameId, const Game::Card & card)
 	: cardInGameId(_cardInGameId)
 	{
 		setCard(&card);
 	}
 
-	void setCard(const Card * card)
+	void setCard(const Game::Card * card)
 	{
 		if (card == nullptr) {
 			setPixmap(QPixmap());
-			cardInGameId = (CardInGameId)-1;
+			cardInGameId = (Game::CardInGameId)-1;
 		} else {
 			if (card->tapped()) {
 				setPixmap(QPixmap(card->getImageName().c_str()).transformed(QTransform().rotate(90)));
@@ -88,7 +88,7 @@ public:
 
 signals:
 
-	void cardActivated(CardInGameId);
+	void cardActivated(Game::CardInGameId);
 
 };
 
@@ -104,7 +104,7 @@ class CardListWidget : public QWidget
 
 private slots:
 
-	void cardActivatedSlot(CardInGameId cardInGameId)
+	void cardActivatedSlot(Game::CardInGameId cardInGameId)
 	{
 		std::cout << cardInGameId << std::endl;
 		emit cardActivated(cardInGameId);
@@ -117,21 +117,21 @@ public:
 		setLayout(&layout);
 	}
 
-	template<class Predicate> void setCards(const std::vector<std::unique_ptr<Card>> & cards, Predicate predicate)
+	template<class Predicate> void setCards(const std::vector<std::unique_ptr<Game::Card>> & cards, Predicate predicate)
 	{
 		cardWidgets.clear();
 		for (size_t i = 0; i < cards.size(); i++) {
 			if (predicate(cards[i])) {
 				cardWidgets.emplace_back(std::unique_ptr<CardWidget>(new CardWidget(i, *cards[i])));
 				layout.addWidget(cardWidgets.back().get(), 10);
-				connect(cardWidgets.back().get(), SIGNAL(cardActivated(CardInGameId)), this, SLOT(cardActivatedSlot(CardInGameId)));
+				connect(cardWidgets.back().get(), SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 			}
 		}
 	}
 
 signals:
 
-	void cardActivated(CardInGameId);
+	void cardActivated(Game::CardInGameId);
 
 };
 
@@ -156,7 +156,7 @@ class TeamWidget : public QWidget
 
 private slots:
 
-	void cardActivatedSlot(CardInGameId cardInGameId)
+	void cardActivatedSlot(Game::CardInGameId cardInGameId)
 	{
 		std::cout << cardInGameId << std::endl;
 		emit cardActivated(cardInGameId);
@@ -178,20 +178,20 @@ public:
 			battlefieldLayout.addWidget(&landsWidget);
 			battlefieldLayout.addWidget(&creaturesWidget);
 
-		connect(&landsWidget, SIGNAL(cardActivated(CardInGameId)), this, SLOT(cardActivatedSlot(CardInGameId)));
-		connect(&creaturesWidget, SIGNAL(cardActivated(CardInGameId)), this, SLOT(cardActivatedSlot(CardInGameId)));
+		connect(&landsWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
+		connect(&creaturesWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 	}
 
 
-	void set(const Game & game, PlayerId forPlayer)
+	void set(const Game & game, Game::PlayerId forPlayer)
 	{
 		std::cout << __PRETTY_FUNCTION__ << "  " << (int)forPlayer << std::endl;
 
 		hpLabel.setText(QString("HP: ") + QString::number(game.player(forPlayer).hp));
 
 		auto gravePredicate =
-			[&](const std::unique_ptr<Card> & pCard) {
-				return (pCard->position == Card::Position::LIBRARY)
+			[&](const std::unique_ptr<Game::Card> & pCard) {
+				return (pCard->position == Game::Card::Position::LIBRARY)
 				    && (pCard->ownerId == forPlayer);
 			};
 
@@ -199,20 +199,20 @@ public:
 		graveLabel.setText(QString("G: ") + QString::number(std::count_if(game.cards.begin(), game.cards.end(), gravePredicate)));
 
 		auto landsPredicate =
-			[&](const std::unique_ptr<Card> & pCard) {
-				return (pCard->position == Card::Position::BATTLEFIELD)
+			[&](const std::unique_ptr<Game::Card> & pCard) {
+				return (pCard->position == Game::Card::Position::BATTLEFIELD)
  				    && (pCard->ownerId == forPlayer)
-					&& (pCard->getType() == Card::Type::LAND);
+					&& (pCard->getType() == Game::Card::Type::LAND);
 			};
 
 		landsWidget.setCards(game.cards, landsPredicate);
 
 
 		auto creaturesPredicate =
-			[&](const std::unique_ptr<Card> & pCard) {
-				return (pCard->position == Card::Position::BATTLEFIELD)
+			[&](const std::unique_ptr<Game::Card> & pCard) {
+				return (pCard->position == Game::Card::Position::BATTLEFIELD)
  				    && (pCard->ownerId == forPlayer)
-					&& (pCard->getType() == Card::Type::CREATURE);
+					&& (pCard->getType() == Game::Card::Type::CREATURE);
 			};
 
 		creaturesWidget.setCards(game.cards, creaturesPredicate);
@@ -220,7 +220,7 @@ public:
 
 signals:
 
-	void cardActivated(CardInGameId);
+	void cardActivated(Game::CardInGameId);
 
 }; 
 
@@ -231,7 +231,7 @@ class GameWidget : public QWidget {
 	Q_OBJECT
 
 	Game & game;
-	PlayerId forPlayer;
+	Game::PlayerId forPlayer;
 
 	QHBoxLayout mainLayout;
 		QGroupBox teamsWidget;
@@ -248,13 +248,13 @@ class GameWidget : public QWidget {
 
 private slots:
 
-	void cardFromHandActivated(CardInGameId cardInGameId) {
+	void cardFromHandActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
 		game.playCardFromHand(forPlayer, cardInGameId);
 		dataUpdated();
 	}
 
-	void cardFromBattlefieldActivated(CardInGameId cardInGameId) {
+	void cardFromBattlefieldActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
 		game.tap(forPlayer, cardInGameId);
 		dataUpdated();
@@ -268,7 +268,7 @@ private slots:
 
 public:
 
-	GameWidget(Game & _game, PlayerId _forPlayer)
+	GameWidget(Game & _game, Game::PlayerId _forPlayer)
 	: game(_game)
 	, forPlayer(_forPlayer)
 	, passButton("pass") {
@@ -285,22 +285,22 @@ public:
 			sideBarLayout.addWidget(&stackWidget);
 			sideBarLayout.addWidget(&passButton);
 
-		connect(&myHandWidget, SIGNAL(cardActivated(CardInGameId)), this, SLOT(cardFromHandActivated(CardInGameId)));
-		connect(&myTeamWidget, SIGNAL(cardActivated(CardInGameId)), this, SLOT(cardFromBattlefieldActivated(CardInGameId)));
+		connect(&myHandWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardFromHandActivated(Game::CardInGameId)));
+		connect(&myTeamWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardFromBattlefieldActivated(Game::CardInGameId)));
 
 		connect(&passButton, SIGNAL(clicked()), this, SLOT(passButtonPressed()));
 	}
 
 	void dataUpdated() {
 		static auto handPredicate =
-			[&](const std::unique_ptr<Card> & pCard) {
-				return (pCard->position == Card::Position::HAND)
+			[&](const std::unique_ptr<Game::Card> & pCard) {
+				return (pCard->position == Game::Card::Position::HAND)
  				    && (pCard->ownerId == forPlayer);
 			};
 
 		static auto stackPredicate =
-			[&](const std::unique_ptr<Card> & pCard) {
-				return (pCard->position == Card::Position::STACK);
+			[&](const std::unique_ptr<Game::Card> & pCard) {
+				return (pCard->position == Game::Card::Position::STACK);
 			};
 
 		myHandWidget.setCards(game.cards, handPredicate);
@@ -310,7 +310,7 @@ public:
 
 		stackWidget.setCards(game.cards, stackPredicate);
 
-		phaseLabel.setText(Turn::phaseToString(game.turn.status));
+		phaseLabel.setText(Game::Turn::phaseToString(game.turn.status));
 	}
 
 };
@@ -326,7 +326,7 @@ class GameWindow : public QMainWindow
 
 public:
 
-	GameWindow(Game & game, PlayerId forPlayer)
+	GameWindow(Game & game, Game::PlayerId forPlayer)
 	: gameWidget(game, forPlayer)
 	{
 		setCentralWidget(&gameWidget);
