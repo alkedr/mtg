@@ -178,10 +178,7 @@ public:
 	bool passed;
 	bool loser;
 
-	Player()
-	: hp(20)
-	, passed(false)
-	{
+	Player() : hp(20), passed(false) {
 	} 
 };
 class Stack {
@@ -305,11 +302,7 @@ public:
 	// TODO: history
 
 
-	Turn()
-	: activePlayerId(0)
-	, priorityPlayerId(0)
-	, phase(FIRST_MAIN)
-	{
+	Turn() : activePlayerId(0), priorityPlayerId(0), phase(FIRST_MAIN) {
 	}
 };
 
@@ -324,12 +317,13 @@ public:
 			}
 		);
 	}
-	void endPhase() {
-		switch (turn.phase) {
+	void startPhase(Turn::Phase phase) {
+		switch (phase) {
 			case (Turn::Phase::UNTAP): {
 				/*for (std::unique_ptr<Card> & pCard : cards) {
-					if (pCard->owner == turn.playerIndex) pCard->untap();
+					if (pCard->owner == turn.activePlayerId) pCard->untap();
 				}*/
+				goToNextPhase();
 				break;
 			}
 			case (Turn::Phase::UPKEEP): {
@@ -366,8 +360,57 @@ public:
 				break;
 			}
 		}
+	}
+	void endPhase(Turn::Phase phase) {
+		switch (phase) {
+			case (Turn::Phase::UNTAP): {
+				break;
+			}
+			case (Turn::Phase::UPKEEP): {
+				break;
+			}
+			case (Turn::Phase::DRAW_CARD): {
+				break;
+			}
+			case (Turn::Phase::FIRST_MAIN): {
+				break;
+			}
+			case (Turn::Phase::COMBAT_BEGIN): {
+				break;
+			}
+			case (Turn::Phase::COMBAT_ATTACK): {
+				break;
+			}
+			case (Turn::Phase::COMBAT_BLOCK): {
+				break;
+			}
+			case (Turn::Phase::COMBAT_DAMAGE): {
+				break;
+			}
+			case (Turn::Phase::COMBAT_END): {
+				break;
+			}
+			case (Turn::Phase::SECOND_MAIN): {
+				break;
+			}
+			case (Turn::Phase::END): {
+				break;
+			}
+			case (Turn::Phase::CLEANUP): {
+				break;
+			}
+		}
+	}
+	void goToNextPhase()
+	{
+		endPhase(turn.phase);
 		turn.phase++;
-		if (turn.phase > Turn::Phase::CLEANUP) turn.phase = Turn::Phase::UNTAP;
+		if (turn.phase > Turn::Phase::CLEANUP) {
+			turn.phase = Turn::Phase::UNTAP;
+			turn.activePlayerId = 1 - turn.activePlayerId;
+			turn.priorityPlayerId = turn.activePlayerId;
+		}
+		startPhase(turn.phase);
 	}
 	void lose(PlayerId playerId) {
 		player(playerId).loser = true;
@@ -396,10 +439,15 @@ public:
 public:
 
 	// getters
-	Player & player(PlayerId id) { return players.at(id); }
-	const Player & player(PlayerId id) const { return players.at(id); }
-	std::unique_ptr<Card> & card(CardInGameId cardInGameId) { return cards.at(cardInGameId); }
-
+	Player & player(PlayerId id) {
+		return players.at(id);
+	}
+	const Player & player(PlayerId id) const {
+		return players.at(id);
+	}
+	std::unique_ptr<Card> & card(CardInGameId cardInGameId) {
+		return cards.at(cardInGameId);
+	}
 
 	void start(PlayerId firstPlayer) {
 		turn.activePlayerId = firstPlayer;
@@ -427,10 +475,13 @@ public:
 		player(playerId).passed = true;
 		if (allPlayersPassed()) {
 			if (stack.empty()) 
-				endPhase();
+				goToNextPhase();
 			else
 				stack.resolve();
 			clearPlayerPassFlag();
+			turn.priorityPlayerId = turn.activePlayerId;
+		} else {
+			turn.priorityPlayerId = 1 - turn.priorityPlayerId;
 		}
 	}
 
@@ -489,9 +540,6 @@ public:                                                                         
 	GETTER_TYPE_SIMPLE(const char *, Description, DESCRIPTION)
 
 #define CARD_END  };
-
-
-
 
 
 class Artifact : public Card {
@@ -607,12 +655,6 @@ public:
 		position = Position::STACK;
 	}
 };
-
-
-
-
-
-
 
 };
 

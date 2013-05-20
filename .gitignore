@@ -1,5 +1,6 @@
 server
 client
 test
+moc_*.cpp
 
 *.swp

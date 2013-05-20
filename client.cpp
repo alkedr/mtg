@@ -145,9 +145,11 @@ class TeamWidget : public QWidget
 	QHBoxLayout teamLayout;
 		QGroupBox playerWidget;
 		QVBoxLayout playerLayout;
+			QLabel nameLabel;
 			QLabel hpLabel;
 			QLabel libraryLabel;
 			QLabel graveLabel;
+			QLabel activeAndPriorityLabel;
 		QGroupBox battlefieldWidget;
 		QVBoxLayout battlefieldLayout;
 			CardListWidget handWidget;
@@ -169,9 +171,11 @@ public:
 		setLayout(&teamLayout);
 		teamLayout.addWidget(&playerWidget);
 			playerWidget.setLayout(&playerLayout);
+			playerLayout.addWidget(&nameLabel);
 			playerLayout.addWidget(&hpLabel);
 			playerLayout.addWidget(&libraryLabel);
 			playerLayout.addWidget(&graveLabel);
+			playerLayout.addWidget(&activeAndPriorityLabel);
 			
 		teamLayout.addWidget(&battlefieldWidget, 1);
 			battlefieldWidget.setLayout(&battlefieldLayout);
@@ -187,6 +191,7 @@ public:
 	{
 		std::cout << __PRETTY_FUNCTION__ << "  " << (int)forPlayer << std::endl;
 
+		nameLabel.setText(QString("Player ") + QString::number(forPlayer+1));
 		hpLabel.setText(QString("HP: ") + QString::number(game.player(forPlayer).hp));
 
 		auto gravePredicate =
@@ -197,6 +202,10 @@ public:
 
 		libraryLabel.setText(QString("L: ") + QString::number(game.player(forPlayer).library.size()));
 		graveLabel.setText(QString("G: ") + QString::number(std::count_if(game.cards.begin(), game.cards.end(), gravePredicate)));
+		activeAndPriorityLabel.setText(
+			((game.turn.activePlayerId == forPlayer) ? QString("A") : QString("")) + 
+			((game.turn.priorityPlayerId == forPlayer) ? QString("P") : QString(""))
+		);
 
 		auto landsPredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
@@ -261,8 +270,7 @@ private slots:
 	}
 
 	void passButtonPressed() {
-		game.pass(0);
-		game.pass(1);
+		game.pass(forPlayer);
 		dataUpdated();
 	}
 
@@ -292,6 +300,9 @@ public:
 	}
 
 	void dataUpdated() {
+
+		forPlayer = game.turn.priorityPlayerId;
+
 		static auto handPredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
 				return (pCard->position == Game::Card::Position::HAND)
