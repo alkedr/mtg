@@ -140,6 +140,8 @@ public:
 	}
 
 	bool tapped() const { return tapped_; }
+	void tap() { tapped_ = true; }
+	void untap() { tapped_ = false; }
 
 	virtual ~Card() {}
 
@@ -178,7 +180,7 @@ public:
 	bool passed;
 	bool loser;
 
-	Player() : hp(20), passed(false) {
+	Player() : hp(20), passed(false), loser(false) {
 	} 
 };
 class Stack {
@@ -320,16 +322,19 @@ public:
 	void startPhase(Turn::Phase phase) {
 		switch (phase) {
 			case (Turn::Phase::UNTAP): {
-				/*for (std::unique_ptr<Card> & pCard : cards) {
-					if (pCard->owner == turn.activePlayerId) pCard->untap();
-				}*/
+				for (std::unique_ptr<Card> & pCard : cards) {
+					if (pCard->ownerId == turn.activePlayerId) pCard->untap();
+				}
 				goToNextPhase();
 				break;
 			}
 			case (Turn::Phase::UPKEEP): {
+				goToNextPhase();
 				break;
 			}
 			case (Turn::Phase::DRAW_CARD): {
+				drawCard(turn.activePlayerId);
+				goToNextPhase();
 				break;
 			}
 			case (Turn::Phase::FIRST_MAIN): {

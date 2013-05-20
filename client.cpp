@@ -203,6 +203,7 @@ public:
 		libraryLabel.setText(QString("L: ") + QString::number(game.player(forPlayer).library.size()));
 		graveLabel.setText(QString("G: ") + QString::number(std::count_if(game.cards.begin(), game.cards.end(), gravePredicate)));
 		activeAndPriorityLabel.setText(
+			((game.player(forPlayer).loser) ? QString("L") : QString("")) + 
 			((game.turn.activePlayerId == forPlayer) ? QString("A") : QString("")) + 
 			((game.turn.priorityPlayerId == forPlayer) ? QString("P") : QString(""))
 		);
@@ -362,8 +363,8 @@ int main(int argc, char ** argv)
 
 	game.players.emplace_back();
 	game.players.emplace_back();
-	game.player(0).library = { 40, 258, 78, 77, 273, 268 }; 
-	game.player(1).library = { 40, 258, 78, 77, 273, 268 }; 
+	game.player(0).library = { 40, 258, 78, 77, 273, 268, 40, 40, 40 }; 
+	game.player(1).library = { 40, 258, 78, 77, 273, 268, 40, 40, 40 }; 
 	game.start(0);
 	game.playCardFromHand(0, 1);
 
