@@ -310,7 +310,7 @@ public:
 
 		stackWidget.setCards(game.cards, stackPredicate);
 
-		phaseLabel.setText(Game::Turn::phaseToString(game.turn.status));
+		phaseLabel.setText(Game::Turn::phaseToString(game.turn.phase));
 	}
 
 };

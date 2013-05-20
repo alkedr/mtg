@@ -1,6 +1,5 @@
 #include "magic.hpp"
 
-#include <iostream>
 
 
 
@@ -39,16 +38,16 @@ static void test_simple()
 	game.playCardFromHand(0, 5);
 
 	game.tap(0, 5);
-	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Game::Color::WHITE, (short)1) );
+	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Color::WHITE, (short)1) );
 
 	game.playCardFromHand(0, 1);
 
 	game.tap(0, 1); 
-	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Game::Color::GREEN, (short)1) );
+	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)1) );
 
 	game.playCardFromHand(0, 0); 
-	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Game::Color::WHITE, (short)0) );
-	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Game::Color::GREEN, (short)0) ); 
+	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Color::WHITE, (short)0) );
+	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)0) ); 
 
 	game.pass(0);
 	game.pass(1);
