@@ -366,7 +366,6 @@ int main(int argc, char ** argv)
 	game.player(0).library = { 40, 258, 78, 77, 273, 268, 40, 40, 40 }; 
 	game.player(1).library = { 40, 258, 78, 77, 273, 268, 40, 40, 40 }; 
 	game.start(0);
-	game.playCardFromHand(0, 1);
 
 	GameWindow gameWindow(game, 0);
 	gameWindow.show();

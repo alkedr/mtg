@@ -309,6 +309,7 @@ public:
 };
 
 	static std::unique_ptr<Card> newCard(const Card::Id cardId, Game & game, PlayerId ownerId);
+	static Card * newCardHelper(const Card::Id cardId, Game & game, Game::PlayerId ownerId);
 
 	bool allPlayersPassed() const {
 		return std::all_of(
@@ -406,8 +407,7 @@ public:
 			}
 		}
 	}
-	void goToNextPhase()
-	{
+	void goToNextPhase() {
 		endPhase(turn.phase);
 		turn.phase++;
 		if (turn.phase > Turn::Phase::CLEANUP) {
@@ -491,29 +491,6 @@ public:
 	}
 
 
-
-
-
-
-#define OVERRIDE(RETURN_VALUE, FUNCTION_NAME, ATTRIBUTES, ...) virtual RETURN_VALUE FUNCTION_NAME(__VA_ARGS__) ATTRIBUTES override final
-
-#define GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) OVERRIDE(TYPE_NAME, get ## PROPERTY_NAME, const, )
-#define GETTER_TYPE_SIMPLE(TYPE_NAME, PROPERTY_NAME, VALUE) GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) { return VALUE; }
-
-#define GETTER(PROPERTY_NAME) GETTER_TYPE(PROPERTY_NAME, PROPERTY_NAME)
-#define GETTER_SIMPLE(PROPERTY_NAME, VALUE) GETTER_TYPE_SIMPLE(PROPERTY_NAME, PROPERTY_NAME, VALUE)
-
-#define COLOR(VALUE) GETTER_SIMPLE(Color, VALUE)
-#define POWER(VALUE) GETTER_SIMPLE(Power, VALUE)
-#define TOUGHNESS(VALUE) GETTER_SIMPLE(Toughness, VALUE)
-
-#define COST(...) GETTER_SIMPLE(Cost, Cost { __VA_ARGS__ })
-
-#define AFTER_TAP OVERRIDE(void, afterTap, , )
-
-
-
-
 template <Card::Id _id> class CardHelper : public Card {
 
 public:
@@ -545,6 +522,26 @@ public:                                                                         
 	GETTER_TYPE_SIMPLE(const char *, Description, DESCRIPTION)
 
 #define CARD_END  };
+
+
+
+#define OVERRIDE(RETURN_VALUE, FUNCTION_NAME, ATTRIBUTES, ...) virtual RETURN_VALUE FUNCTION_NAME(__VA_ARGS__) ATTRIBUTES override final
+
+#define GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) OVERRIDE(TYPE_NAME, get ## PROPERTY_NAME, const, )
+#define GETTER_TYPE_SIMPLE(TYPE_NAME, PROPERTY_NAME, VALUE) GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) { return VALUE; }
+
+#define GETTER(PROPERTY_NAME) GETTER_TYPE(PROPERTY_NAME, PROPERTY_NAME)
+#define GETTER_SIMPLE(PROPERTY_NAME, VALUE) GETTER_TYPE_SIMPLE(PROPERTY_NAME, PROPERTY_NAME, VALUE)
+
+#define COLOR(VALUE) GETTER_SIMPLE(Color, VALUE)
+#define POWER(VALUE) GETTER_SIMPLE(Power, VALUE)
+#define TOUGHNESS(VALUE) GETTER_SIMPLE(Toughness, VALUE)
+
+#define COST(...) GETTER_SIMPLE(Cost, Cost { __VA_ARGS__ })
+
+#define AFTER_TAP OVERRIDE(void, afterTap, , )
+
+
 
 
 class Artifact : public Card {
@@ -619,14 +616,12 @@ public:
 
 	Player & owner() { return game.player(ownerId); }
 
-	virtual void playFromHand()
-	{
+	virtual void playFromHand() {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		position = Position::BATTLEFIELD;
 	}
 
-	virtual void activateAbility() override
-	{
+	virtual void activateAbility() override {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		tapped_ = true;
 		afterTap();
@@ -642,8 +637,7 @@ public:
 
 	virtual Type getType() const override { return Type::PLANESWALKER; }
 
-	virtual void playFromHand()
-	{
+	virtual void playFromHand() {
 		//game.stack.push(new PlayCardEffect(*this));
 		position = Position::STACK;
 	}
@@ -654,8 +648,7 @@ public:
 
 	virtual Type getType() const override { return Type::SORCERY; }
 
-	virtual void playFromHand()
-	{
+	virtual void playFromHand() {
 		//game.stack.push(new PlayCardEffect(*this));
 		position = Position::STACK;
 	}
@@ -712,12 +705,17 @@ CARD_END
 
 
 
-#define CARD(Z, ID, DATA) case(DATA+ID): { return std::move(std::unique_ptr<Game::Card>(new Game::CardHelper<DATA+ID>(game, ownerId))); }
+#define CARD(Z, ID, DATA) case(DATA+ID): { return new Game::CardHelper<DATA+ID>(game, ownerId); }
 
-std::unique_ptr<Game::Card> Game::newCard(const Game::Card::Id cardId, Game & game, Game::PlayerId ownerId) {
+Game::Card * Game::newCardHelper(const Game::Card::Id cardId, Game & game, Game::PlayerId ownerId) {
 	switch (cardId) {
 		BOOST_PP_REPEAT(255, CARD, 0)
 		BOOST_PP_REPEAT(255, CARD, 255)
-		default: { return std::move(std::unique_ptr<Game::Card>(new Game::CardHelper<0>(game, ownerId))); }
+		default: { return new Game::CardHelper<0>(game, ownerId); }
 	}
+}
+
+
+std::unique_ptr<Game::Card> Game::newCard(const Game::Card::Id cardId, Game & game, Game::PlayerId ownerId) {
+	return std::move(std::unique_ptr<Game::Card>(newCardHelper(cardId, game, ownerId)));
 }
