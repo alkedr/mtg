@@ -20,6 +20,10 @@ class ECardClassNotFound : public std::exception {
 public: 
 	ECardClassNotFound(/*const Card::Id _cardId*/) /*: cardId(_cardId)*/ {} 
 };
+class ETooMuchLandsPerTurn : public std::exception { 
+public: 
+	virtual const char * what() const noexcept { return "too much lands per turn"; }
+};
 
 
 enum Color : unsigned char {
@@ -403,6 +407,7 @@ public:
 				break;
 			}
 			case (Turn::Phase::CLEANUP): {
+				landsPlayedThisTurn = 0;
 				break;
 			}
 		}
@@ -441,7 +446,13 @@ public:
 	std::vector<std::unique_ptr<Card>> cards;  // all cards allocated here,  CardInGameId - index in this vector  DO NOT ERASE! DO NOT FREE! DO NOT NULL!
 	Stack stack;
 
+	unsigned char maxLandsPerTurn;
+	unsigned char landsPlayedThisTurn;
+
 public:
+
+	Game() : maxLandsPerTurn(1), landsPlayedThisTurn(0) {
+	}
 
 	// getters
 	Player & player(PlayerId id) {
@@ -618,6 +629,8 @@ public:
 
 	virtual void playFromHand() {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
+		if (game.landsPlayedThisTurn >= game.maxLandsPerTurn) throw ETooMuchLandsPerTurn();
+		game.landsPlayedThisTurn++;
 		position = Position::BATTLEFIELD;
 	}
 
