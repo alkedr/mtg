@@ -15,14 +15,26 @@ class ECardNotFound : public std::exception {
 public:
 	virtual const char * what() const noexcept { return "card not found"; }
 };
-class ECardClassNotFound : public std::exception { 
+class ECardClassNotFound : public std::exception {
 	/*const Card::Id cardId;*/ 
 public: 
 	ECardClassNotFound(/*const Card::Id _cardId*/) /*: cardId(_cardId)*/ {} 
 };
-class ETooMuchLandsPerTurn : public std::exception { 
+class ETooMuchLandsPerTurn : public std::exception {
 public: 
 	virtual const char * what() const noexcept { return "too much lands per turn"; }
+};
+class EWrongPhase : public std::exception {
+public: 
+	virtual const char * what() const noexcept { return "wrong phase"; }
+};
+class EWrongZone : public std::exception {
+public: 
+	virtual const char * what() const noexcept { return "wrong zone"; }
+};
+class ENotYourTurn : public std::exception {
+public: 
+	virtual const char * what() const noexcept { return "not your turn"; }
 };
 
 
@@ -629,6 +641,9 @@ public:
 
 	virtual void playFromHand() {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
+		if (position != Card::Position::HAND) throw EWrongZone();
+		if (ownerId != game.turn.activePlayerId) throw ENotYourTurn();
+		if ((game.turn.phase != Turn::Phase::FIRST_MAIN) && (game.turn.phase != Turn::Phase::SECOND_MAIN)) throw EWrongPhase();
 		if (game.landsPlayedThisTurn >= game.maxLandsPerTurn) throw ETooMuchLandsPerTurn();
 		game.landsPlayedThisTurn++;
 		position = Position::BATTLEFIELD;
