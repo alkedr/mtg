@@ -1,14 +1,5 @@
 #pragma once
 
-#include <array>
-#include <memory>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <algorithm>
-#include <boost/preprocessor.hpp>
-
-
 
 
 class ECardNotFound : public std::exception {

@@ -17,39 +17,58 @@ else
 	test_BUILD_TYPE_FLAGS :=
 endif
 
-common_FLAGS := -pipe $(common_BUILD_TYPE_FLAGS)
+common_FLAGS := -pipe $(common_BUILD_TYPE_FLAGS) -pthread
+comman_LIBS  :=
 
-server_FLAGS := $(common_FLAGS) $(server_BUILD_TYPE_FLAGS) -lboost_system -pthread
+server_FLAGS := $(common_FLAGS) $(server_BUILD_TYPE_FLAGS)
+server_LIBS  := $(comman_LIBS) -lboost_system
 
-client_FLAGS := $(common_FLAGS) $(client_BUILD_TYPE_FLAGS) -fPIE $(shell pkg-config --cflags --libs Qt5Gui Qt5Widgets | sed 's/-I\//-isystem\ \//g') -pthread
+client_FLAGS := $(common_FLAGS) $(client_BUILD_TYPE_FLAGS) -fPIE $(shell pkg-config --cflags Qt5Gui Qt5Widgets | sed 's/-I\//-isystem\ \//g')
+client_LIBS  := $(shell pkg-config --libs Qt5Gui Qt5Widgets)
 
 test_FLAGS := $(common_FLAGS) $(test_BUILD_TYPE_FLAGS)
 
 .PHONY : all clean
 
-all: server client test
+all: server client
 
+#test
 
-server: server.cpp magic.hpp  Makefile
+precompiled-server.hpp: precompiled.hpp
+precompiled-client.hpp: precompiled.hpp
+
+precompiled-server.hpp.pch: precompiled-server.hpp Makefile
+	@echo PRECOMPILE $@
+	$(CXX) $(common_FLAGS) -x c++-header $< -o $@
+
+server: server.cpp magic.hpp precompiled-server.hpp.pch Makefile
 	@echo BUILD $@
-	@$(CXX) $($@_FLAGS)  $< -o $@
+	@$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-server.hpp $< -o $@
+
+precompiled-client.hpp.pch: precompiled-client.hpp Makefile
+	@echo PRECOMPILE $@
+	$(CXX) $(client_FLAGS) -x c++-header $< -o $@
 
 moc_client.cpp: client.cpp Makefile
 	@echo MOC $@
 	@$(MOC) $< -o $@
 
-client: client.cpp moc_client.cpp magic.hpp  Makefile
+client: client.cpp moc_client.cpp magic.hpp precompiled-client.hpp.pch Makefile
 	@echo BUILD $@
-	@$(CXX) $($@_FLAGS)  $< -o $@
+	@$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-client.hpp $< -o $@
 ifeq ($(RELEASE), y)
 #	@strip --remove-section=.comment --remove-section=.note $@
 	@upx --best --ultra-brute -qq $@
 	@wc -c $@
 endif
 
-test: test.cpp magic.hpp  Makefile
+precompiled-test.hpp.pch: precompiled-test.hpp Makefile
+	@echo PRECOMPILE $@
+	$(CXX) $(test_FLAGS) -x c++-header $< -o $@
+
+test: test.cpp magic.hpp precompiled-test.hpp.pch Makefile
 	@echo BUILD $@
-	@$(CXX) $($@_FLAGS)  $< -o $@
+	$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-client.hpp $< -o $@
 
 
 clean:

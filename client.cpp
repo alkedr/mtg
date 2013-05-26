@@ -1,7 +1,5 @@
 #include "magic.hpp"
 
-#include <QtGui>
-#include <QtWidgets>
 
 
 
