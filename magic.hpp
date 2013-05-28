@@ -27,6 +27,19 @@ class ENotYourTurn : public std::exception {
 public: 
 	virtual const char * what() const noexcept { return "not your turn"; }
 };
+class ENotYourPriority : public std::exception {
+public: 
+	virtual const char * what() const noexcept { return "not your priority"; }
+};
+class EWrongCardOwner : public std::exception {
+public: 
+	virtual const char * what() const noexcept { return "wrong card owner"; }
+};
+class EWrongCardType : public std::exception {
+public: 
+	virtual const char * what() const noexcept { return "wrong card type"; }
+};
+
 
 
 enum Color : unsigned char {
@@ -331,11 +344,15 @@ public:
 	public:
 		CardInGameId attacker;
 		Target target;
+
+		Attack(CardInGameId _attacker, Target _target) : attacker(_attacker), target(_target) {}
 	};
 	class Block {
 	public:
 		CardInGameId blocker;
 		Target target;
+
+		Block(CardInGameId _blocker, Target _target) : blocker(_blocker), target(_target) {}
 	};
 
 	static std::unique_ptr<Card> newCard(const Card::Id cardId, Game & game, PlayerId ownerId);
@@ -475,6 +492,9 @@ public:
 	unsigned char maxLandsPerTurn;
 	unsigned char landsPlayedThisTurn;
 
+	std::vector<Attack> attackers;
+	std::vector<Block> blockers;
+
 public:
 
 	Game() : maxLandsPerTurn(1), landsPlayedThisTurn(0) {
@@ -501,20 +521,19 @@ public:
 	// actions of player
 	void playCardFromHand(PlayerId playerId, CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << std::endl; 
-		// TODO: check errors 
-		std::unique_ptr<Card> & pCard = card(cardInGameId);
-		if (pCard->ownerId != playerId) throw "not your card";
-		pCard->playFromHand();
+		if (card(cardInGameId)->ownerId != playerId) throw EWrongCardOwner();
+		card(cardInGameId)->playFromHand();
 		clearPlayerPassFlag();
-	} 
+	}
 	void tap(PlayerId playerId, CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << std::endl; 
-		if (card(cardInGameId)->ownerId != playerId) throw "not your card";
+		if (card(cardInGameId)->ownerId != playerId) throw EWrongCardOwner();
 		card(cardInGameId)->activateAbility();
 		clearPlayerPassFlag();
-	} 
+	}
 	void pass(PlayerId playerId) {
 		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
 		player(playerId).passed = true;
 		if (allPlayersPassed()) {
 			if (stack.empty()) 
@@ -527,35 +546,45 @@ public:
 			turn.priorityPlayerId = 1 - turn.priorityPlayerId;
 		}
 	}
-	void declareAttacker(PlayerId playerId, CardInGameId attacker, Target target) {
+	void declareAttacker(PlayerId playerId, CardInGameId cardInGameId, Target target) {
 		std::cout << __PRETTY_FUNCTION__ << std::endl; 
-		
+		if (turn.activePlayerId != playerId) throw ENotYourTurn();
+		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
+		if (turn.phase != Turn::Phase::COMBAT_ATTACK) throw EWrongPhase();
+		if (card(cardInGameId)->position != Card::Position::BATTLEFIELD) throw EWrongZone();
+		if (card(cardInGameId)->getType() != Card::Type::CREATURE) throw EWrongCardType();
+		attackers.emplace_back(cardInGameId, target);
 	}
-	void declareBlocker(PlayerId playerId, CardInGameId blocker, Target target) {
+	void declareBlocker(PlayerId playerId, CardInGameId cardInGameId, Target target) {
 		std::cout << __PRETTY_FUNCTION__ << std::endl; 
-
+		if (turn.activePlayerId != playerId) throw ENotYourTurn();
+		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
+		if (turn.phase != Turn::Phase::COMBAT_BLOCK) throw EWrongPhase();
+		if (card(cardInGameId)->position != Card::Position::BATTLEFIELD) throw EWrongZone();
+		if (card(cardInGameId)->getType() != Card::Type::CREATURE) throw EWrongCardType();
+		blockers.emplace_back(cardInGameId, target);
 	}
 
 
-template <Card::Id _id> class CardHelper : public Card {
+	template <Card::Id _id> class CardHelper : public Card {
 
-public:
+	public:
 
-	virtual Type getType() const override { return Type::LAND; }
+		virtual Type getType() const override { return Type::LAND; }
 
-	virtual Id getId() const override { return _id; }
-	virtual const char * getName() const { return "Unknown Card"; }
-	virtual const char * getDescription() const { return "Unknown"; }
+		virtual Id getId() const override { return _id; }
+		virtual const char * getName() const { return "Unknown Card"; }
+		virtual const char * getDescription() const { return "Unknown"; }
 
-	virtual const std::string getImageName() const { return "dsgfd"; }
+		virtual const std::string getImageName() const { return "dsgfd"; }
 
-	virtual void playFromHand() override {}
+		virtual void playFromHand() override {}
 
-	virtual void activateAbility() override {}
+		virtual void activateAbility() override {}
 
-	CardHelper(Game & game, PlayerId ownerId)
-	: Card(game, ownerId) {}
-};
+		CardHelper(Game & game, PlayerId ownerId)
+		: Card(game, ownerId) {}
+	};
 
 
 #define CARD_BEGIN(BASE, ID, NAME, DESCRIPTION)                                                           \
@@ -590,120 +619,120 @@ public:                                                                         
 
 
 
-class Artifact : public Card {
+	class Artifact : public Card {
 
-public:
+	public:
 
-	virtual Type getType() const override { return Type::ARTIFACT; }
+		virtual Type getType() const override { return Type::ARTIFACT; }
 
-};
-class Creature : public Card {
+	};
+	class Creature : public Card {
 
-public:
+	public:
 
-	typedef short Power;
-	typedef short Toughness;
-
-
-	virtual Type getType() const override { return Type::CREATURE; }
+		typedef short Power;
+		typedef short Toughness;
 
 
-	//virtual bool isFlying(const Player & blockerOwner, const Creature & blocker) const { return false; }
-	virtual bool isUnblocable() const { return false; }
-
-	virtual Power getPower() const = 0;
-	virtual Toughness getToughness() const = 0;
-
-	virtual Cost getCost() const = 0;
-
-	Player & owner() { return game.player(ownerId); }
-
-	virtual void playFromHand()
-	{
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		owner().manaPool.subtract(getCost());
-		game.stack.push(*this, &Card::moveToBattlefield);
-		position = Position::STACK;
-	}
+		virtual Type getType() const override { return Type::CREATURE; }
 
 
-	Creature(Game & game, PlayerId ownerId)
-	: Card(game, ownerId) {}
-};
-class Enchantment : public Card {
+		//virtual bool isFlying(const Player & blockerOwner, const Creature & blocker) const { return false; }
+		virtual bool isUnblocable() const { return false; }
 
-public:
+		virtual Power getPower() const = 0;
+		virtual Toughness getToughness() const = 0;
 
-	virtual Type getType() const override { return Type::ENCHANTMENT; }
+		virtual Cost getCost() const = 0;
 
-	virtual void playFromHand()
-	{
-		//game.stack.push(new PlayCardEffect(*this));
-		position = Position::STACK;
-	}
-};
-class Instant : public Card {
+		Player & owner() { return game.player(ownerId); }
 
-public:
-
-	virtual Type getType() const override { return Type::INSTANT; }
-
-	virtual void playFromHand()
-	{
-		//game.stack.push(new PlayCardEffect(*this));
-		position = Position::STACK;
-	}
-};
-class Land : public Card {
-
-public:
-
-	virtual Type getType() const override { return Type::LAND; }
-
-	Player & owner() { return game.player(ownerId); }
-
-	virtual void playFromHand() {
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		if (position != Card::Position::HAND) throw EWrongZone();
-		if (ownerId != game.turn.activePlayerId) throw ENotYourTurn();
-		if ((game.turn.phase != Turn::Phase::FIRST_MAIN) && (game.turn.phase != Turn::Phase::SECOND_MAIN)) throw EWrongPhase();
-		if (game.landsPlayedThisTurn >= game.maxLandsPerTurn) throw ETooMuchLandsPerTurn();
-		game.landsPlayedThisTurn++;
-		position = Position::BATTLEFIELD;
-	}
-
-	virtual void activateAbility() override {
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		tapped_ = true;
-		afterTap();
-	}
+		virtual void playFromHand()
+		{
+			std::cout << __PRETTY_FUNCTION__ << std::endl;
+			owner().manaPool.subtract(getCost());
+			game.stack.push(*this, &Card::moveToBattlefield);
+			position = Position::STACK;
+		}
 
 
-	Land(Game & game, PlayerId ownerId)
-	: Card(game, ownerId) {}
-};
-class Planeswalker : public Card {
+		Creature(Game & game, PlayerId ownerId)
+		: Card(game, ownerId) {}
+	};
+	class Enchantment : public Card {
 
-public:
+	public:
 
-	virtual Type getType() const override { return Type::PLANESWALKER; }
+		virtual Type getType() const override { return Type::ENCHANTMENT; }
 
-	virtual void playFromHand() {
-		//game.stack.push(new PlayCardEffect(*this));
-		position = Position::STACK;
-	}
-};
-class Sorcery : public Card {
+		virtual void playFromHand()
+		{
+			//game.stack.push(new PlayCardEffect(*this));
+			position = Position::STACK;
+		}
+	};
+	class Instant : public Card {
 
-public:
+	public:
 
-	virtual Type getType() const override { return Type::SORCERY; }
+		virtual Type getType() const override { return Type::INSTANT; }
 
-	virtual void playFromHand() {
-		//game.stack.push(new PlayCardEffect(*this));
-		position = Position::STACK;
-	}
-};
+		virtual void playFromHand()
+		{
+			//game.stack.push(new PlayCardEffect(*this));
+			position = Position::STACK;
+		}
+	};
+	class Land : public Card {
+
+	public:
+
+		virtual Type getType() const override { return Type::LAND; }
+
+		Player & owner() { return game.player(ownerId); }
+
+		virtual void playFromHand() {
+			std::cout << __PRETTY_FUNCTION__ << std::endl;
+			if (position != Card::Position::HAND) throw EWrongZone();
+			if (ownerId != game.turn.activePlayerId) throw ENotYourTurn();
+			if ((game.turn.phase != Turn::Phase::FIRST_MAIN) && (game.turn.phase != Turn::Phase::SECOND_MAIN)) throw EWrongPhase();
+			if (game.landsPlayedThisTurn >= game.maxLandsPerTurn) throw ETooMuchLandsPerTurn();
+			game.landsPlayedThisTurn++;
+			position = Position::BATTLEFIELD;
+		}
+
+		virtual void activateAbility() override {
+			std::cout << __PRETTY_FUNCTION__ << std::endl;
+			tapped_ = true;
+			afterTap();
+		}
+
+
+		Land(Game & game, PlayerId ownerId)
+		: Card(game, ownerId) {}
+	};
+	class Planeswalker : public Card {
+
+	public:
+
+		virtual Type getType() const override { return Type::PLANESWALKER; }
+
+		virtual void playFromHand() {
+			//game.stack.push(new PlayCardEffect(*this));
+			position = Position::STACK;
+		}
+	};
+	class Sorcery : public Card {
+
+	public:
+
+		virtual Type getType() const override { return Type::SORCERY; }
+
+		virtual void playFromHand() {
+			//game.stack.push(new PlayCardEffect(*this));
+			position = Position::STACK;
+		}
+	};
 
 };
 

@@ -114,3 +114,16 @@ Tokens aren't cards!
 Card::castAsLand()
 Card::castAsInstant()
 Card::castAsUsual()
+
+
+
+
+casting land:
+	phase = MAIN, activePlayer = me, didn't cast land on this turn
+
+	special throw that doesn't throw sometimes
+
+	if we have card that says that owner can cast any number of lands:
+		Game::playCardFromHand calls Land::playFromHand
+		Land::playFromHand searches history, finds land that was played on this turn and calls Game::throwException(ECastTooManyLands());
+		Game::throwException() gives all cards a chance to abort throwing exception
