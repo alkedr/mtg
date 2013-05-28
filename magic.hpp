@@ -314,6 +314,29 @@ public:
 	Turn() : activePlayerId(0), priorityPlayerId(0), phase(FIRST_MAIN) {
 	}
 };
+	class Target {
+	public:
+		enum Type {
+			PLAYER,
+			CARD
+		};
+
+		Type type;
+		union {
+			CardInGameId cardInGameId;
+			PlayerId playerId;
+		};
+	};
+	class Attack {
+	public:
+		CardInGameId attacker;
+		Target target;
+	};
+	class Block {
+	public:
+		CardInGameId blocker;
+		Target target;
+	};
 
 	static std::unique_ptr<Card> newCard(const Card::Id cardId, Game & game, PlayerId ownerId);
 	static Card * newCardHelper(const Card::Id cardId, Game & game, Game::PlayerId ownerId);
@@ -491,6 +514,7 @@ public:
 		clearPlayerPassFlag();
 	} 
 	void pass(PlayerId playerId) {
+		std::cout << __PRETTY_FUNCTION__ << std::endl; 
 		player(playerId).passed = true;
 		if (allPlayersPassed()) {
 			if (stack.empty()) 
@@ -502,6 +526,14 @@ public:
 		} else {
 			turn.priorityPlayerId = 1 - turn.priorityPlayerId;
 		}
+	}
+	void declareAttacker(PlayerId playerId, CardInGameId attacker, Target target) {
+		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+		
+	}
+	void declareBlocker(PlayerId playerId, CardInGameId blocker, Target target) {
+		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+
 	}
 
 

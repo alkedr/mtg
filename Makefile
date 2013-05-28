@@ -1,4 +1,4 @@
-RELEASE := n
+RELEASE := y
 
 CXX := clang++ -std=c++11
 MOC = moc
@@ -39,7 +39,7 @@ precompiled-client.hpp: precompiled.hpp
 
 precompiled-server.hpp.pch: precompiled-server.hpp Makefile
 	@echo PRECOMPILE $@
-	$(CXX) $(common_FLAGS) -x c++-header $< -o $@
+	$(CXX) $(server_FLAGS) -x c++-header $< -o $@
 
 server: server.cpp magic.hpp precompiled-server.hpp.pch Makefile
 	@echo BUILD $@
