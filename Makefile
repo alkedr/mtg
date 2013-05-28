@@ -1,4 +1,4 @@
-RELEASE := n
+RELEASE := y
 
 CXX := clang++ -std=c++11
 MOC = moc
@@ -49,7 +49,7 @@ precompiled-%.hpp.pch: precompiled-%.hpp precompiled.hpp Makefile
 
 moc_%.cpp: %.cpp Makefile
 	@echo MOC $<
-	@$(MOC) $< -o $@
+	@$(MOC) -i $< -o $@
 
 .SECONDEXPANSION:
 mtg-%: precompiled-%.hpp.pch $$($$*_SOURCES) $$($$*_HEADERS) Makefile

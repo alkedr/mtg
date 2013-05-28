@@ -176,7 +176,7 @@ public:
 	virtual Type getType() const = 0;
 
 	virtual const std::string getImageName() const {
-		return "images/" + std::to_string(getId()) + ".jpg";
+		return std::string("images/") + getName() + ".jpg";
 	}
 
 	virtual Color getColor() const { return Color::COLORLESS; }
@@ -245,42 +245,6 @@ public:
 	bool empty() const {
 		return s.empty();
 	}
-};
-class Team {
-
-	typedef std::vector<std::pair<PlayerId, Player>> Storage;
-
-	Storage s;
-
-public:
-
-	typedef unsigned char Id;
-
-
-	typedef Storage::iterator iterator;
-	typedef Storage::const_iterator const_iterator;
-	typedef Storage::reverse_iterator reverse_iterator;
-	typedef Storage::const_reverse_iterator const_reverse_iterator;
-
-
-	iterator begin() { return s.begin(); }
-	iterator end() { return s.end(); }
-	reverse_iterator rbegin() { return s.rbegin(); }
-	reverse_iterator rend() { return s.rend(); }
-	const_iterator begin() const { return s.begin(); }
-	const_iterator end() const { return s.end(); }
-	const_reverse_iterator rbegin() const { return s.rbegin(); }
-	const_reverse_iterator rend() const { return s.rend(); }
-
-	Storage::size_type size() const { return s.size(); }
-
-	bool empty() const { return s.empty(); }
-
-
-	Team()
-	{
-	}
-
 };
 class Turn {
 public:
@@ -741,34 +705,34 @@ public:                                                                         
 
 
 
-CARD_BEGIN(Game::Land,  40, "Plains", "Plains")
+CARD_BEGIN(Game::Land,   1, "Plains", "Plains")
 	AFTER_TAP { owner().manaPool.add(Color::WHITE); }
 CARD_END
 
 
-CARD_BEGIN(Game::Land, 258, "Island", "Island")
+CARD_BEGIN(Game::Land,   2, "Island", "Island")
 	AFTER_TAP { owner().manaPool.add(Color::BLUE); }
 CARD_END
 
 
-CARD_BEGIN(Game::Land,  78, "Swamp", "Swamp")
+CARD_BEGIN(Game::Land,   3, "Swamp", "Swamp")
 	AFTER_TAP { owner().manaPool.add(Color::BLACK); }
 CARD_END
 
 
-CARD_BEGIN(Game::Land,  77, "Mountain", "Mountain")
+CARD_BEGIN(Game::Land,   4, "Mountain", "Mountain")
 	AFTER_TAP { owner().manaPool.add(Color::RED); }
 CARD_END
 
 
-CARD_BEGIN(Game::Land, 273, "Forest", "Forest")
+CARD_BEGIN(Game::Land,   5, "Forest", "Forest")
 	AFTER_TAP { owner().manaPool.add(Color::GREEN); }
 CARD_END
 
 
 
 
-CARD_BEGIN(Game::Creature, 268, "Grizzly Bears", "")
+CARD_BEGIN(Game::Creature,   6, "Grizzly Bears", "")
 	POWER(2)
 	TOUGHNESS(2)
 	virtual Cost getCost() const {

@@ -1,3 +1,5 @@
+namespace {
+
 #include "magic.hpp"
 
 
@@ -71,9 +73,7 @@ class Server {
 	boost::asio::io_service & io_service;
 	boost::asio::ip::tcp::acceptor acceptor;
 
-
-	void start_accept()
-	{
+	void start_accept() {
 		Session * new_session = new Session(io_service);
 		acceptor.async_accept(
 			new_session->socket(),
@@ -85,9 +85,7 @@ class Server {
 			)
 		);
 	}
-
-	void handle_accept(Session * new_session, const boost::system::error_code & error)
-	{
+	void handle_accept(Session * new_session, const boost::system::error_code & error) {
 		if (!error)
 			new_session->start();
 		else 
@@ -96,16 +94,8 @@ class Server {
 	}
 
 public:
-	Server(boost::asio::io_service & _io_service, uint16_t _port)
-	 : io_service(_io_service)
-	 , acceptor(_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), _port))
-	{
+	Server(boost::asio::io_service & _io_service, uint16_t _port) : io_service(_io_service), acceptor(_io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), _port)) {
 		start_accept();
-	}
-
-	void run()
-	{
-
 	}
 };
 
@@ -113,6 +103,8 @@ public:
 const char server_name[] = "mtg";
 const char server_version[] = "1.0";
 
+
+}
 
 int main(/*int argc, const char ** argv*/) {
 	Game g;

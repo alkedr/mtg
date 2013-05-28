@@ -1,3 +1,5 @@
+namespace {
+
 #include "magic.hpp"
 
 
@@ -45,6 +47,9 @@ static void test_simple() {
 	game.pass(0);
 	game.pass(1);
 }
+
+}
+
 
 int main() {
 	print_sizes();

@@ -1,5 +1,6 @@
-#include "magic.hpp"
+namespace {
 
+#include "magic.hpp"
 
 class CardWidget : public QWidget {
 	Q_OBJECT
@@ -282,6 +283,8 @@ public:
 	}
 };
 
+}
+
 int main(int argc, char ** argv) {
 	QApplication app(argc, argv);
 
@@ -289,8 +292,8 @@ int main(int argc, char ** argv) {
 
 	game.players.emplace_back();
 	game.players.emplace_back();
-	game.player(0).library = { 40, 258, 78, 77, 273, 268, 40, 40, 40 }; 
-	game.player(1).library = { 40, 258, 78, 77, 273, 268, 40, 40, 40 }; 
+	game.player(0).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 }; 
+	game.player(1).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 }; 
 	game.start(0);
 
 	GameWindow gameWindow(game, 0);
