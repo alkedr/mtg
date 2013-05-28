@@ -17,59 +17,43 @@ else
 	test_BUILD_TYPE_FLAGS :=
 endif
 
+common_HEADERS := magic.hpp precompiled.hpp
 common_FLAGS := -pipe $(common_BUILD_TYPE_FLAGS) -pthread
 comman_LIBS  :=
 
+server_HEADERS := $(common_HEADERS) precompiled-server.hpp
+server_SOURCES := $(common_SOURCES) server.cpp
 server_FLAGS := $(common_FLAGS) $(server_BUILD_TYPE_FLAGS)
 server_LIBS  := $(comman_LIBS) -lboost_system
 
+client_HEADERS := $(common_HEADERS) precompiled-client.hpp moc_client.cpp
+client_SOURCES := $(common_SOURCES) client.cpp
 client_FLAGS := $(common_FLAGS) $(client_BUILD_TYPE_FLAGS) -fPIE $(shell pkg-config --cflags Qt5Gui Qt5Widgets | sed 's/-I\//-isystem\ \//g')
-client_LIBS  := $(shell pkg-config --libs Qt5Gui Qt5Widgets)
+client_LIBS  := $(common_LIBS) $(shell pkg-config --libs Qt5Gui Qt5Widgets)
 
+test_HEADERS := precompiled-test.hpp
+test_SOURCES := test.cpp
 test_FLAGS := $(common_FLAGS) $(test_BUILD_TYPE_FLAGS)
 
 .PHONY : all clean
 
-all: server client
+all: mtg-server mtg-client
 
 #test
 
-precompiled-server.hpp: precompiled.hpp
-precompiled-client.hpp: precompiled.hpp
+precompiled-%.hpp.pch: precompiled-%.hpp precompiled.hpp Makefile
+	@echo PRECOMPILE $<
+	@$(CXX) $($*_FLAGS) -x c++-header $< -o $@
 
-precompiled-server.hpp.pch: precompiled-server.hpp Makefile
-	@echo PRECOMPILE $@
-	@$(CXX) $(server_FLAGS) -x c++-header $< -o $@
-
-server: server.cpp magic.hpp precompiled-server.hpp.pch Makefile
-	@echo BUILD $@
-	@$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-server.hpp $< -o $@
-
-precompiled-client.hpp.pch: precompiled-client.hpp Makefile
-	@echo PRECOMPILE $@
-	@$(CXX) $(client_FLAGS) -x c++-header $< -o $@
-
-moc_client.cpp: client.cpp Makefile
-	@echo MOC $@
+moc_%.cpp: %.cpp Makefile
+	@echo MOC $<
 	@$(MOC) $< -o $@
 
-client: client.cpp moc_client.cpp magic.hpp precompiled-client.hpp.pch Makefile
+.SECONDEXPANSION:
+mtg-%: precompiled-%.hpp.pch $$($$*_SOURCES) $$($$*_HEADERS) Makefile
 	@echo BUILD $@
-	@$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-client.hpp $< -o $@
-ifeq ($(RELEASE), y)
-#	@strip --remove-section=.comment --remove-section=.note $@
-	@upx --best --ultra-brute -qq $@
-	@wc -c $@
-endif
-
-precompiled-test.hpp.pch: precompiled-test.hpp Makefile
-	@echo PRECOMPILE $@
-	@$(CXX) $(test_FLAGS) -x c++-header $< -o $@
-
-test: test.cpp magic.hpp precompiled-test.hpp.pch Makefile
-	@echo BUILD $@
-	@$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-client.hpp $< -o $@
-
+	@$(CXX) $($*_FLAGS) $($*_LIBS) -include precompiled-$*.hpp $($*_SOURCES) -o $@
 
 clean:
-	rm -Rf server client test moc_client.cpp 
+	rm -Rf mtg-server mtg-client mtg-test moc_client.cpp 
+
