@@ -41,6 +41,8 @@ all: mtg-server mtg-client
 
 #test
 
+.SECONDARY:
+
 precompiled-%.hpp.pch: precompiled-%.hpp precompiled.hpp Makefile
 	@echo PRECOMPILE $<
 	@$(CXX) $($*_FLAGS) -x c++-header $< -o $@

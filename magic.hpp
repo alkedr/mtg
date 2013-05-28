@@ -39,6 +39,10 @@ class EWrongCardType : public std::exception {
 public: 
 	virtual const char * what() const noexcept { return "wrong card type"; }
 };
+class ENotEnoughMana : public std::exception {
+public: 
+	virtual const char * what() const noexcept { return "not enough mana"; }
+};
 
 
 
@@ -71,9 +75,9 @@ public:
 				colorlessCount += pair.second;
 			} else {
 				auto it = std::find_if(s.begin(), s.end(), [&](const std::pair<Color, short int> & p) { return p.first == pair.first; } );
-				if (it == s.end()) throw "not enough mana";
+				if (it == s.end()) throw ENotEnoughMana();
 				it->second -= pair.second;
-				if (it->second < 0) throw "not enough mana";
+				if (it->second < 0) throw ENotEnoughMana();
 			}
 		}
 		for (auto & pair : s) {
@@ -81,7 +85,7 @@ public:
 			pair.second -= a;
 			colorlessCount -= a;
 		}
-		if (colorlessCount > 0) throw "not enough mana";
+		if (colorlessCount > 0) throw ENotEnoughMana();
 	}
 
 };
