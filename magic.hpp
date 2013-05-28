@@ -1,7 +1,6 @@
 #pragma once
 
 
-
 class ECardNotFound : public std::exception {
 public:
 	virtual const char * what() const noexcept { return "card not found"; }
@@ -43,7 +42,6 @@ class ENotEnoughMana : public std::exception {
 public: 
 	virtual const char * what() const noexcept { return "not enough mana"; }
 };
-
 
 
 enum Color : unsigned char {
@@ -89,7 +87,6 @@ public:
 	}
 
 };
-
 
 
 class Game {
@@ -798,8 +795,8 @@ Game::Card * Game::newCardHelper(const Game::Card::Id cardId, Game & game, Game:
 		default: { return new Game::CardHelper<0>(game, ownerId); }
 	}
 }
-
-
 std::unique_ptr<Game::Card> Game::newCard(const Game::Card::Id cardId, Game & game, Game::PlayerId ownerId) {
 	return std::move(std::unique_ptr<Game::Card>(newCardHelper(cardId, game, ownerId)));
 }
+
+#undef CARD

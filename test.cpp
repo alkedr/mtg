@@ -1,25 +1,18 @@
 #include "magic.hpp"
 
 
-
-
-
 #define CHECK(COND) if ((COND) == false) { std::cout << "FAIL: " << #COND << std::endl; }
 #define CHECK_EQUAL(X, Y) if ((X) != (Y)) { std::cout << "FAIL: " << #X << " != " << #Y << "  " << (X) << " != " << (Y) << std::endl; }
 
 
-
-static void print_sizes()
-{
+static void print_sizes() {
 	std::cout << "sizeof(Game): " << sizeof(Game) << std::endl;
 	std::cout << "sizeof(Game::Turn): " << sizeof(Game::Turn) << std::endl;
 	std::cout << "sizeof(Game::Player): " << sizeof(Game::Player) << std::endl;
 	std::cout << "sizeof(Game::Stack): " << sizeof(Game::Stack) << std::endl;
 	std::cout << "sizeof(Game::Card): " << sizeof(Game::Card) << std::endl;
 }
-
-static void test_simple()
-{
+static void test_simple() {
 	Game game;
 	game.players.emplace_back();
 	game.players.emplace_back();
@@ -53,10 +46,7 @@ static void test_simple()
 	game.pass(1);
 }
 
-
-
-int main()
-{
+int main() {
 	print_sizes();
 	test_simple();
 }

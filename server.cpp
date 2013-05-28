@@ -1,8 +1,6 @@
 #include "magic.hpp"
 
 
-
-
 class Session {
 	boost::asio::ip::tcp::socket socket_;
 	enum { max_length = 1024 };
@@ -69,10 +67,6 @@ public:
 	}
 
 };
-
-
-
-
 class Server {
 	boost::asio::io_service & io_service;
 	boost::asio::ip::tcp::acceptor acceptor;
@@ -120,8 +114,7 @@ const char server_name[] = "mtg";
 const char server_version[] = "1.0";
 
 
-int main(/*int argc, const char ** argv*/)
-{
+int main(/*int argc, const char ** argv*/) {
 	Game g;
 	auto c = Game::newCard(1, g, 0);
 

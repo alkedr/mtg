@@ -1,11 +1,7 @@
 #include "magic.hpp"
 
 
-
-
-
-class CardWidget : public QWidget
-{
+class CardWidget : public QWidget {
 	Q_OBJECT
 
     QPixmap source_;
@@ -13,21 +9,14 @@ class CardWidget : public QWidget
 
 	Game::CardInGameId cardInGameId;
 
-public:
-
-	CardWidget()
-	: cardInGameId((Game::CardInGameId)-1)
-	{
+public: 
+	CardWidget() : cardInGameId((Game::CardInGameId)-1) {
 	}
-
-	CardWidget(Game::CardInGameId _cardInGameId, const Game::Card & card)
-	: cardInGameId(_cardInGameId)
-	{
+	CardWidget(Game::CardInGameId _cardInGameId, const Game::Card & card) : cardInGameId(_cardInGameId) {
 		setCard(&card);
 	}
 
-	void setCard(const Game::Card * card)
-	{
+	void setCard(const Game::Card * card) {
 		if (card == nullptr) {
 			setPixmap(QPixmap());
 			cardInGameId = (Game::CardInGameId)-1;
@@ -39,15 +28,12 @@ public:
 			}
 		}
 	}
-
-	void setPixmap(QPixmap aPicture)
-	{
+	void setPixmap(QPixmap aPicture) {
     	source_ = current_ = aPicture;
     	repaint();
 	}
 
-	void paintEvent(QPaintEvent * event) override
-	{
+	void paintEvent(QPaintEvent * event) override {
     	QWidget::paintEvent(event);
 
 		if (source_.isNull()) return;
@@ -76,47 +62,32 @@ public:
 		QPainter paint(this);
 		paint.drawPixmap(x, y, current_);
 	}
-
-	void mousePressEvent(QMouseEvent * event) override
-	{
+	void mousePressEvent(QMouseEvent * event) override {
 		if (event->button() == Qt::LeftButton) {
 			emit cardActivated(cardInGameId);
 		}
 	}
 
-signals:
-
-	void cardActivated(Game::CardInGameId);
-
+signals: 
+	void cardActivated(Game::CardInGameId); 
 };
-
-
-
-
-class CardListWidget : public QWidget
-{
+class CardListWidget : public QWidget {
 	Q_OBJECT
 
 	QHBoxLayout layout;
 	std::vector<std::unique_ptr<CardWidget>> cardWidgets;
 
-private slots:
-
-	void cardActivatedSlot(Game::CardInGameId cardInGameId)
-	{
+private slots: 
+	void cardActivatedSlot(Game::CardInGameId cardInGameId) {
 		std::cout << cardInGameId << std::endl;
 		emit cardActivated(cardInGameId);
 	}
 
-public:
-
-	CardListWidget()
-	{
+public: 
+	CardListWidget() {
 		setLayout(&layout);
-	}
-
-	template<class Predicate> void setCards(const std::vector<std::unique_ptr<Game::Card>> & cards, Predicate predicate)
-	{
+	} 
+	template<class Predicate> void setCards(const std::vector<std::unique_ptr<Game::Card>> & cards, Predicate predicate) {
 		cardWidgets.clear();
 		for (size_t i = 0; i < cards.size(); i++) {
 			if (predicate(cards[i])) {
@@ -127,17 +98,10 @@ public:
 		}
 	}
 
-signals:
-
-	void cardActivated(Game::CardInGameId);
-
+signals: 
+	void cardActivated(Game::CardInGameId); 
 };
-
-
-
-
-class TeamWidget : public QWidget
-{
+class TeamWidget : public QWidget {
 	Q_OBJECT
 
 	QHBoxLayout teamLayout;
@@ -154,18 +118,14 @@ class TeamWidget : public QWidget
 			CardListWidget creaturesWidget;
 			CardListWidget landsWidget;
 
-private slots:
-
-	void cardActivatedSlot(Game::CardInGameId cardInGameId)
-	{
+private slots: 
+	void cardActivatedSlot(Game::CardInGameId cardInGameId) {
 		std::cout << cardInGameId << std::endl;
 		emit cardActivated(cardInGameId);
 	}
 
-public:
-
-	TeamWidget()
-	{
+public: 
+	TeamWidget() {
 		setLayout(&teamLayout);
 		teamLayout.addWidget(&playerWidget);
 			playerWidget.setLayout(&playerLayout);
@@ -183,10 +143,7 @@ public:
 		connect(&landsWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 		connect(&creaturesWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 	}
-
-
-	void set(const Game & game, Game::PlayerId forPlayer)
-	{
+	void set(const Game & game, Game::PlayerId forPlayer) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << (int)forPlayer << std::endl;
 
 		nameLabel.setText(QString("Player ") + QString::number(forPlayer+1));
@@ -226,15 +183,9 @@ public:
 		creaturesWidget.setCards(game.cards, creaturesPredicate);
 	}
 
-signals:
-
-	void cardActivated(Game::CardInGameId);
-
+signals: 
+	void cardActivated(Game::CardInGameId); 
 }; 
-
-
-
-
 class GameWidget : public QWidget {
 	Q_OBJECT
 
@@ -254,31 +205,24 @@ class GameWidget : public QWidget {
 			CardListWidget stackWidget;
 			QPushButton passButton;
 
-private slots:
-
+private slots: 
 	void cardFromHandActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
 		game.playCardFromHand(forPlayer, cardInGameId);
 		dataUpdated();
 	}
-
 	void cardFromBattlefieldActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
 		game.tap(forPlayer, cardInGameId);
 		dataUpdated();
 	}
-
 	void passButtonPressed() {
 		game.pass(forPlayer);
 		dataUpdated();
 	}
 
-public:
-
-	GameWidget(Game & _game, Game::PlayerId _forPlayer)
-	: game(_game)
-	, forPlayer(_forPlayer)
-	, passButton("pass") {
+public: 
+	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), passButton("pass") {
 		setLayout(&mainLayout);
 		mainLayout.addWidget(&teamsWidget, 1);
 			teamsWidget.setLayout(&teamsLayout);
@@ -299,7 +243,6 @@ public:
 	}
 
 	void dataUpdated() {
-
 		forPlayer = game.turn.priorityPlayerId;
 
 		static auto handPredicate =
@@ -322,39 +265,24 @@ public:
 
 		phaseLabel.setText(Game::Turn::phaseToString(game.turn.phase));
 	}
-
 };
-
-
-
-
-class GameWindow : public QMainWindow
-{
+class GameWindow : public QMainWindow {
 	Q_OBJECT
 
 	GameWidget gameWidget;
 
-public:
-
-	GameWindow(Game & game, Game::PlayerId forPlayer)
-	: gameWidget(game, forPlayer)
-	{
+public: 
+	GameWindow(Game & game, Game::PlayerId forPlayer) : gameWidget(game, forPlayer) {
 		setCentralWidget(&gameWidget);
 		dataUpdated();
 	}
 
-	void dataUpdated()
-	{
+	void dataUpdated() {
 		gameWidget.dataUpdated();
 	}
 };
 
-
-
-
-
-int main(int argc, char ** argv)
-{
+int main(int argc, char ** argv) {
 	QApplication app(argc, argv);
 
 	Game game;
@@ -392,7 +320,6 @@ int main(int argc, char ** argv)
 
 	return app.exec();
 }
-
 
 
 #include "moc_client.cpp"
