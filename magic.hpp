@@ -457,7 +457,8 @@ public:
 	}
 	void goToNextPhase() {
 		endPhase(turn.phase);
-		turn.phase++;
+		//turn.phase++;
+		turn.phase = (Turn::Phase)((int)turn.phase + 1);
 		if (turn.phase > Turn::Phase::CLEANUP) {
 			turn.phase = Turn::Phase::UNTAP;
 			turn.activePlayerId = 1 - turn.activePlayerId;

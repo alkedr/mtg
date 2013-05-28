@@ -39,7 +39,7 @@ precompiled-client.hpp: precompiled.hpp
 
 precompiled-server.hpp.pch: precompiled-server.hpp Makefile
 	@echo PRECOMPILE $@
-	$(CXX) $(server_FLAGS) -x c++-header $< -o $@
+	@$(CXX) $(server_FLAGS) -x c++-header $< -o $@
 
 server: server.cpp magic.hpp precompiled-server.hpp.pch Makefile
 	@echo BUILD $@
@@ -47,7 +47,7 @@ server: server.cpp magic.hpp precompiled-server.hpp.pch Makefile
 
 precompiled-client.hpp.pch: precompiled-client.hpp Makefile
 	@echo PRECOMPILE $@
-	$(CXX) $(client_FLAGS) -x c++-header $< -o $@
+	@$(CXX) $(client_FLAGS) -x c++-header $< -o $@
 
 moc_client.cpp: client.cpp Makefile
 	@echo MOC $@
@@ -64,11 +64,11 @@ endif
 
 precompiled-test.hpp.pch: precompiled-test.hpp Makefile
 	@echo PRECOMPILE $@
-	$(CXX) $(test_FLAGS) -x c++-header $< -o $@
+	@$(CXX) $(test_FLAGS) -x c++-header $< -o $@
 
 test: test.cpp magic.hpp precompiled-test.hpp.pch Makefile
 	@echo BUILD $@
-	$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-client.hpp $< -o $@
+	@$(CXX) $($@_FLAGS) $($@_LIBS) -include precompiled-client.hpp $< -o $@
 
 
 clean:
