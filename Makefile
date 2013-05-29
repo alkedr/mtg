@@ -37,7 +37,7 @@ test_FLAGS := $(common_FLAGS) $(test_BUILD_TYPE_FLAGS)
 
 .PHONY : all clean
 
-all: mtg-server mtg-client
+all: mtg-server mtg-client mtg-test
 
 #test
 
