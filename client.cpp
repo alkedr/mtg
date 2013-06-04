@@ -271,16 +271,28 @@ class GameWidget : public QWidget {
 private slots: 
 	void cardFromHandActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
-		game.playCardFromHand(forPlayer, cardInGameId);
+		try {
+			game.playCardFromHand(forPlayer, cardInGameId);
+		} catch (const std::exception & e) {
+			QMessageBox(QMessageBox::Critical, "Error", e.what(), QMessageBox::Close).exec();
+		}
 		dataUpdated();
 	}
 	void cardFromBattlefieldActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
-		game.tap(forPlayer, cardInGameId);
+		try {
+			game.tap(forPlayer, cardInGameId);
+		} catch (const std::exception & e) {
+			QMessageBox(QMessageBox::Critical, "Error", e.what(), QMessageBox::Close).exec();
+		}
 		dataUpdated();
 	}
 	void passButtonPressed() {
-		game.pass(forPlayer);
+		try {
+			game.pass(forPlayer);
+		} catch (const std::exception & e) {
+			QMessageBox(QMessageBox::Critical, "Error", e.what(), QMessageBox::Close).exec();
+		}
 		dataUpdated();
 	}
 
