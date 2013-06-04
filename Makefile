@@ -1,4 +1,4 @@
-RELEASE := y
+RELEASE := n
 
 CXX := clang++ -std=c++11
 MOC = moc

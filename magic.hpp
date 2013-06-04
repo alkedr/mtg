@@ -149,11 +149,7 @@ public:
 		position = newPosition;
 	}
 
-	Card(Game & _game, PlayerId _ownerId)
-	: game(_game)
-	, ownerId(_ownerId)
-	, tapped_(false)
-	{
+	Card(Game & _game, PlayerId _ownerId) : game(_game), ownerId(_ownerId), tapped_(false) {
 	}
 
 	void moveToBattlefield() {

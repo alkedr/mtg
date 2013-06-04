@@ -127,3 +127,15 @@ casting land:
 		Game::playCardFromHand calls Land::playFromHand
 		Land::playFromHand searches history, finds land that was played on this turn and calls Game::throwException(ECastTooManyLands());
 		Game::throwException() gives all cards a chance to abort throwing exception
+
+
+CardLayout
+
+CardStackWidget:
+	- overlapping cards, arranged vertically
+	- 1 card and number
+	- 1 tapped + number, 1 untapped + number
+need a way to determine if two cards are completely equal
+
+
+64x88 ~ 8x11

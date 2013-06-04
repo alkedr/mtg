@@ -2,77 +2,49 @@ namespace {
 
 #include "magic.hpp"
 
+
 class CardWidget : public QWidget {
 	Q_OBJECT
 
-    QPixmap source_;
-    QPixmap current_;
-
 	Game::CardInGameId cardInGameId;
+	QPixmap pixmap;
 
 public: 
-	CardWidget() : cardInGameId((Game::CardInGameId)-1) {
-	}
-	CardWidget(Game::CardInGameId _cardInGameId, const Game::Card & card) : cardInGameId(_cardInGameId) {
-		setCard(&card);
-	}
-
-	void setCard(const Game::Card * card) {
-		if (card == nullptr) {
-			setPixmap(QPixmap());
-			cardInGameId = (Game::CardInGameId)-1;
-		} else {
+	CardWidget(Game::CardInGameId _cardInGameId = (Game::CardInGameId)-1, const Game::Card * card = nullptr)
+	: cardInGameId(_cardInGameId)
+	{
+		if (card != nullptr) {
 			if (card->tapped()) {
-				setPixmap(QPixmap(card->getImageName().c_str()).transformed(QTransform().rotate(90)));
+				pixmap = QPixmap(card->getImageName().c_str()).transformed(QTransform().rotate(90));
 			} else {
-				setPixmap(QPixmap(card->getImageName().c_str()));
+				pixmap = QPixmap(card->getImageName().c_str());
 			}
 		}
 	}
-	void setPixmap(QPixmap aPicture) {
-    	source_ = current_ = aPicture;
-    	repaint();
-	}
 
-	void paintEvent(QPaintEvent * event) override {
-    	QWidget::paintEvent(event);
-
-		if (source_.isNull()) return;
-
-		int cw = width(), ch = height();
-		int pw = current_.width(), ph = current_.height();
-
-		if (
-		    ((pw > cw) && (ph > ch) && (pw/cw > ph/ch))   //both width and height are bigger, ratio at height is bigger or
-		 || ((pw > cw) && (ph <= ch))                     //only the width is bigger or
-		 || ((pw < cw) && (ph < ch) && (cw/pw < ch/ph))   //both width and height is smaller, ratio at width is smaller
-		) {
-			current_ = source_.scaledToWidth(cw, Qt::TransformationMode::FastTransformation);
-		} else 
-		if (
-		    ((pw > cw) && (ph > ch) && (pw/cw <= ph/ch))  //both width and height are bigger, ratio at width is bigger or
-		 || ((ph > ch) && (pw <= cw))                     //only the height is bigger or
-		 || ((pw < cw) && (ph < ch) && (cw/pw > ch/ph))   //both width and height is smaller, ratio at height is smaller
-		) {
-			current_ = source_.scaledToHeight(ch, Qt::TransformationMode::FastTransformation);
-		}
-
-		int x = (cw - current_.width()) / 2;
-		int y = (ch - current_.height()) / 2;
-
-		QPainter paint(this);
-		paint.drawPixmap(x, y, current_);
-	}
 	void mousePressEvent(QMouseEvent * event) override {
+		std::cout << "w: " << width() << " h:" << height() << std::endl;
 		if (event->button() == Qt::LeftButton) {
 			emit cardActivated(cardInGameId);
 		}
 	}
 
+	void paintEvent(QPaintEvent * event) override {
+		QPainter p(this);
+		double ratio = (double)width() / (double)height();
+		if (ratio < 63.0/88.0) {
+			double scale = width() / 63.0;
+			p.drawPixmap(0, 0, width(), (int)88.0*scale, pixmap);
+		} else {
+			double scale = height() / 88.0;
+			p.drawPixmap(0, 0, (int)63.0*scale, height(), pixmap);
+		}
+	}
+
 signals: 
 	void cardActivated(Game::CardInGameId); 
-};
-class CardListWidget : public QWidget {
+}; 
+class CardStackWidget : public QWidget {
 	Q_OBJECT
 
 	QHBoxLayout layout;
@@ -85,17 +57,107 @@ private slots:
 	}
 
 public: 
+	CardStackWidget() {
+		setLayout(&layout);
+		setSizeIncrement(8, 11);
+	}
+
+	void addCard(Game::CardInGameId cardInGameId, const Game::Card * card)
+	{
+		cardWidgets.emplace_back(new CardWidget(cardInGameId, card));
+		layout.addWidget(cardWidgets.back().get());
+		connect(cardWidgets.back().get(), SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
+	}
+
+signals: 
+	void cardActivated(Game::CardInGameId); 
+};
+class CardListWidget : public QWidget {
+private:
+	class Layout : public QLayout {
+	private:
+
+		QList<QLayoutItem*> list;
+
+		QSize sizeInUnits() const {
+			if (list.empty()) return QSize(0, 0);
+
+			QSize s(0, 11);
+			for (QLayoutItem * item : list) {
+				s += QSize(item->widget()->sizeIncrement().width(), 0);
+			}
+			std::cout << s.width() << "x" << s.height() << std::endl;
+			s.scale(geometry().width(), geometry().height(), Qt::KeepAspectRatio);
+			std::cout << s.width() << "x" << s.height() << std::endl;
+			return s;
+		}
+	
+	public:
+		Layout() {
+		}
+		~Layout() override {
+			QLayoutItem *item;
+			while ((item = takeAt(0))) delete item;
+		}
+		void addItem(QLayoutItem * item) override {
+			list.append(item);
+		}
+		QSize sizeHint() const override {
+			return QSize(100, 100);
+		}
+		QLayoutItem * itemAt(int index) const override {
+			return list.value(index);
+		}
+		QLayoutItem * takeAt(int index) override {
+			if (index >= 0 && index < list.size())
+				return list.takeAt(index);
+			else
+				return 0;
+		}
+		int count() const {
+			return list.size();
+		}
+		void setGeometry(const QRect & rect) override {
+			QLayout::setGeometry(rect);
+
+			QSize s = sizeInUnits();
+			double scaleRatio = (double)s.height() / 11;
+
+			int x = 0;
+			for (QLayoutItem * item : list) {
+				int itemWidth = item->widget()->sizeIncrement().width() * scaleRatio;
+				item->setGeometry(QRect(x, 0, itemWidth, s.height()));
+				x += itemWidth;
+			}
+		}
+	};
+
+private:
+	Q_OBJECT
+
+	Layout layout;
+	std::map<Game::Card::Id, CardStackWidget> widgets;
+
+private slots: 
+	void cardActivatedSlot(Game::CardInGameId cardInGameId) {
+		std::cout << cardInGameId << std::endl;
+		emit cardActivated(cardInGameId);
+	}
+
+public: 
 	CardListWidget() {
 		setLayout(&layout);
-	} 
+	}
 	template<class Predicate> void setCards(const std::vector<std::unique_ptr<Game::Card>> & cards, Predicate predicate) {
-		cardWidgets.clear();
+		widgets.clear();
 		for (size_t i = 0; i < cards.size(); i++) {
 			if (predicate(cards[i])) {
-				cardWidgets.emplace_back(std::unique_ptr<CardWidget>(new CardWidget(i, *cards[i])));
-				layout.addWidget(cardWidgets.back().get(), 10);
-				connect(cardWidgets.back().get(), SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
+				widgets[/*cards[i]->getId()*/i].addCard(i, cards[i].get());
 			}
+		}
+		for (auto & pair : widgets) {
+			layout.addWidget(&pair.second);
+			connect(&pair.second, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 		}
 	}
 
