@@ -8,10 +8,11 @@ class CardWidget : public QWidget {
 
 	Game::CardInGameId cardInGameId;
 	QPixmap pixmap;
+	QColor highlightColor_;
 
 public: 
 	CardWidget(Game::CardInGameId _cardInGameId = (Game::CardInGameId)-1, const Game::Card * card = nullptr)
-	: cardInGameId(_cardInGameId)
+	: cardInGameId(_cardInGameId), highlightColor_(0, 0, 0, 0)
 	{
 		if (card != nullptr) {
 			if (card->tapped()) {
@@ -20,6 +21,13 @@ public:
 				pixmap = QPixmap(card->getImageName().c_str());
 			}
 		}
+	}
+
+	void setHighlightColor(QColor c) {
+		highlightColor_ = c;
+	}
+	QColor highlightColor() const {
+		return highlightColor_;
 	}
 
 	void mousePressEvent(QMouseEvent * event) override {
@@ -31,13 +39,17 @@ public:
 
 	void paintEvent(QPaintEvent * event) override {
 		QPainter p(this);
-		double ratio = (double)width() / (double)height();
+		p.setBrush(QBrush(highlightColor()));
+
+		double ratio = (double)(width()-10) / (double)(height()-10);
 		if (ratio < 63.0/88.0) {
-			double scale = width() / 63.0;
-			p.drawPixmap(0, 0, width(), (int)88.0*scale, pixmap);
+			double scale = (width()-10) / 63.0;
+			if (highlightColor() != QColor(0, 0, 0, 0)) p.drawRect(0, 0, width(), (int)88.0*scale + 10);
+			p.drawPixmap(5, 5, (width()-10), (int)88.0*scale, pixmap);
 		} else {
-			double scale = height() / 88.0;
-			p.drawPixmap(0, 0, (int)63.0*scale, height(), pixmap);
+			double scale = (height()-10) / 88.0;
+			if (highlightColor() != QColor(0, 0, 0, 0)) p.drawRect(0, 0, (int)63.0*scale + 10, height());
+			p.drawPixmap(5, 5, (int)63.0*scale, (height()-10), pixmap);
 		}
 	}
 
