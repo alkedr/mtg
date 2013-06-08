@@ -44,8 +44,8 @@ public:
 	void paintEvent(QPaintEvent * event) override {
 		std::cout << __FUNCTION__ << " w: " << width() << " h:" << height() << " r: " << (double)width()/height() << std::endl;
 		QPainter p(this);
-		p.setBrush(QBrush(QColor(0, 0, 0, 255)));
-		p.drawRect(0, 0, width(), height());
+		//p.setBrush(QBrush(QColor(0, 0, 0, 255)));
+		//p.drawRect(0, 0, width(), height());
 
 		QPixmap scaled = pixmap.scaled(QSize(width()-10, height()-10), Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
