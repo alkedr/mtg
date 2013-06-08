@@ -238,24 +238,23 @@ public:
 signals: 
 	void cardActivated(Game::CardInGameId); 
 }; 
-class GameWidget : public QWidget {
+class GameWidget : public QSplitter {
 	Q_OBJECT
 
 	Game & game;
 	Game::PlayerId forPlayer;
 
-	QHBoxLayout mainLayout;
-		QGroupBox teamsWidget;
-		QVBoxLayout teamsLayout;
-			TeamWidget myTeamWidget;
-			TeamWidget enemyTeamWidget;
-			CardListWidget myHandWidget;
-		QGroupBox sideBarWidget;
-		QVBoxLayout sideBarLayout;
-			CardWidget bigCardWidget;
-			QLabel phaseLabel;
-			CardListWidget stackWidget;
-			QPushButton passButton;
+	QGroupBox teamsWidget;
+	QVBoxLayout teamsLayout;
+		TeamWidget myTeamWidget;
+		TeamWidget enemyTeamWidget;
+		CardListWidget myHandWidget;
+	QGroupBox sideBarWidget;
+	QVBoxLayout sideBarLayout;
+		CardWidget bigCardWidget;
+		QLabel phaseLabel;
+		CardListWidget stackWidget;
+		QPushButton passButton;
 
 private slots: 
 	void cardFromHandActivated(Game::CardInGameId cardInGameId) {
@@ -287,13 +286,12 @@ private slots:
 
 public: 
 	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), passButton("pass") {
-		setLayout(&mainLayout);
-		mainLayout.addWidget(&teamsWidget, 1);
+		addWidget(&teamsWidget);
 			teamsWidget.setLayout(&teamsLayout);
 			teamsLayout.addWidget(&enemyTeamWidget);
 			teamsLayout.addWidget(&myTeamWidget);
 			teamsLayout.addWidget(&myHandWidget);
-		mainLayout.addWidget(&sideBarWidget);
+		addWidget(&sideBarWidget);
 			sideBarWidget.setLayout(&sideBarLayout);
 			sideBarLayout.addWidget(&bigCardWidget);
 			sideBarLayout.addWidget(&phaseLabel);
