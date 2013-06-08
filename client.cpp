@@ -9,16 +9,20 @@ class CardWidget : public QWidget {
 	Game::CardInGameId cardInGameId;
 	QPixmap pixmap;
 	QColor highlightColor_;
+	bool tapped;
 
 public: 
 	CardWidget(Game::CardInGameId _cardInGameId = (Game::CardInGameId)-1, const Game::Card * card = nullptr)
-	: cardInGameId(_cardInGameId), highlightColor_(0, 0, 0, 0)
+	: cardInGameId(_cardInGameId), highlightColor_(100, 0, 0, 255), tapped(false)
 	{
 		if (card != nullptr) {
+			tapped = card->tapped();
 			if (card->tapped()) {
 				pixmap = QPixmap(card->getImageName().c_str()).transformed(QTransform().rotate(90));
+				setSizeIncrement(88, 88);
 			} else {
 				pixmap = QPixmap(card->getImageName().c_str());
+				setSizeIncrement(63, 88);
 			}
 		}
 	}
@@ -38,52 +42,25 @@ public:
 	}
 
 	void paintEvent(QPaintEvent * event) override {
+		std::cout << __FUNCTION__ << " w: " << width() << " h:" << height() << " r: " << (double)width()/height() << std::endl;
 		QPainter p(this);
-		p.setBrush(QBrush(highlightColor()));
+		p.setBrush(QBrush(QColor(0, 0, 0, 255)));
+		p.drawRect(0, 0, width(), height());
 
-		double ratio = (double)(width()-10) / (double)(height()-10);
-		if (ratio < 63.0/88.0) {
-			double scale = (width()-10) / 63.0;
-			if (highlightColor() != QColor(0, 0, 0, 0)) p.drawRect(0, 0, width(), (int)88.0*scale + 10);
-			p.drawPixmap(5, 5, (width()-10), (int)88.0*scale, pixmap);
-		} else {
-			double scale = (height()-10) / 88.0;
-			if (highlightColor() != QColor(0, 0, 0, 0)) p.drawRect(0, 0, (int)63.0*scale + 10, height());
-			p.drawPixmap(5, 5, (int)63.0*scale, (height()-10), pixmap);
+		QPixmap scaled = pixmap.scaled(QSize(width()-10, height()-10), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+		int y = (tapped) ? (scaled.width() - scaled.height()) : (height() - scaled.height() - 10);
+
+		if (highlightColor() != QColor(0, 0, 0, 0)) {
+			p.setBrush(QBrush(highlightColor()));
+			p.drawRect(0, y, scaled.width() + 10, scaled.height() + 10);
 		}
+		p.drawPixmap(5, y+5, scaled);
 	}
 
 signals: 
 	void cardActivated(Game::CardInGameId); 
 }; 
-class CardStackWidget : public QWidget {
-	Q_OBJECT
-
-	QHBoxLayout layout;
-	std::vector<std::unique_ptr<CardWidget>> cardWidgets;
-
-private slots: 
-	void cardActivatedSlot(Game::CardInGameId cardInGameId) {
-		std::cout << cardInGameId << std::endl;
-		emit cardActivated(cardInGameId);
-	}
-
-public: 
-	CardStackWidget() {
-		setLayout(&layout);
-		setSizeIncrement(8, 11);
-	}
-
-	void addCard(Game::CardInGameId cardInGameId, const Game::Card * card)
-	{
-		cardWidgets.emplace_back(new CardWidget(cardInGameId, card));
-		layout.addWidget(cardWidgets.back().get());
-		connect(cardWidgets.back().get(), SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
-	}
-
-signals: 
-	void cardActivated(Game::CardInGameId); 
-};
 class CardListWidget : public QWidget {
 private:
 	class Layout : public QLayout {
@@ -94,13 +71,13 @@ private:
 		QSize sizeInUnits() const {
 			if (list.empty()) return QSize(0, 0);
 
-			QSize s(0, 11);
+			QSize s(list.size()*10, 88);
 			for (QLayoutItem * item : list) {
 				s += QSize(item->widget()->sizeIncrement().width(), 0);
 			}
-			std::cout << s.width() << "x" << s.height() << std::endl;
+			std::cout << __FUNCTION__ << " " << s.width() << "x" << s.height() << std::endl;
 			s.scale(geometry().width(), geometry().height(), Qt::KeepAspectRatio);
-			std::cout << s.width() << "x" << s.height() << std::endl;
+			std::cout << __FUNCTION__ << " " << s.width() << "x" << s.height() << std::endl;
 			return s;
 		}
 	
@@ -132,14 +109,16 @@ private:
 		void setGeometry(const QRect & rect) override {
 			QLayout::setGeometry(rect);
 
-			QSize s = sizeInUnits();
-			double scaleRatio = (double)s.height() / 11;
+			double scaleRatio = (double)rect.height() / 88;
+			std::cout << __FUNCTION__ << " ratio: " << scaleRatio << std::endl;
 
 			int x = 0;
 			for (QLayoutItem * item : list) {
 				int itemWidth = item->widget()->sizeIncrement().width() * scaleRatio;
-				item->setGeometry(QRect(x, 0, itemWidth, s.height()));
-				x += itemWidth;
+				int itemHeight = item->widget()->sizeIncrement().height() * scaleRatio;
+				std::cout << __FUNCTION__ << " " << "w: " << itemWidth << " h: " << itemHeight << std::endl;
+				item->setGeometry(QRect(x, 0, itemWidth, itemHeight));
+				x += itemWidth+10;
 			}
 		}
 	};
@@ -148,7 +127,7 @@ private:
 	Q_OBJECT
 
 	Layout layout;
-	std::map<Game::Card::Id, CardStackWidget> widgets;
+	std::vector<std::unique_ptr<CardWidget>> cardWidgets;
 
 private slots: 
 	void cardActivatedSlot(Game::CardInGameId cardInGameId) {
@@ -161,15 +140,13 @@ public:
 		setLayout(&layout);
 	}
 	template<class Predicate> void setCards(const std::vector<std::unique_ptr<Game::Card>> & cards, Predicate predicate) {
-		widgets.clear();
+		cardWidgets.clear();
 		for (size_t i = 0; i < cards.size(); i++) {
 			if (predicate(cards[i])) {
-				widgets[/*cards[i]->getId()*/i].addCard(i, cards[i].get());
+				cardWidgets.emplace_back(new CardWidget(i, cards[i].get()));
+				layout.addWidget(cardWidgets.back().get());
+				connect(cardWidgets.back().get(), SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 			}
-		}
-		for (auto & pair : widgets) {
-			layout.addWidget(&pair.second);
-			connect(&pair.second, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 		}
 	}
 

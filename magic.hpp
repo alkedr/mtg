@@ -338,12 +338,10 @@ public:
 				break;
 			}
 			case (Turn::Phase::UPKEEP): {
-				goToNextPhase();
 				break;
 			}
 			case (Turn::Phase::DRAW_CARD): {
 				drawCard(turn.activePlayerId);
-				goToNextPhase();
 				break;
 			}
 			case (Turn::Phase::FIRST_MAIN): {
