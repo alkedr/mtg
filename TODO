@@ -133,4 +133,4 @@ CardStackWidget:
 need a way to determine if two cards are completely equal
 
 
-64x88 ~ 8x11
+ScrollBar for CardListWidget

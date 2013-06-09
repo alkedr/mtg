@@ -114,8 +114,8 @@ private:
 
 			int x = 0;
 			for (QLayoutItem * item : list) {
-				int itemWidth = item->widget()->sizeIncrement().width() * scaleRatio;
-				int itemHeight = item->widget()->sizeIncrement().height() * scaleRatio;
+				int itemWidth = (int)(item->widget()->sizeIncrement().width() * scaleRatio);
+				int itemHeight = (int)(item->widget()->sizeIncrement().height() * scaleRatio);
 				std::cout << __FUNCTION__ << " " << "w: " << itemWidth << " h: " << itemHeight << std::endl;
 				item->setGeometry(QRect(x, 0, itemWidth, itemHeight));
 				x += itemWidth+10;
@@ -153,7 +153,7 @@ public:
 signals: 
 	void cardActivated(Game::CardInGameId); 
 };
-class TeamWidget : public QWidget {
+class TeamWidget : public QGroupBox {
 	Q_OBJECT
 
 	QHBoxLayout teamLayout;
@@ -178,6 +178,7 @@ private slots:
 
 public: 
 	TeamWidget() {
+		setContentsMargins(0, 0, 0, 0);
 		setLayout(&teamLayout);
 		teamLayout.addWidget(&playerWidget);
 			playerWidget.setLayout(&playerLayout);
@@ -286,7 +287,11 @@ private slots:
 
 public: 
 	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), passButton("pass") {
+		setContentsMargins(0, 0, 0, 0);
+		setFrameShape(QFrame::NoFrame);
+		teamsWidget.setContentsMargins(0, 0, 0, 0);
 		addWidget(&teamsWidget);
+			teamsLayout.setSpacing(0);
 			teamsWidget.setLayout(&teamsLayout);
 			teamsLayout.addWidget(&enemyTeamWidget);
 			teamsLayout.addWidget(&myTeamWidget);
@@ -335,6 +340,7 @@ class GameWindow : public QMainWindow {
 
 public: 
 	GameWindow(Game & game, Game::PlayerId forPlayer) : gameWidget(game, forPlayer) {
+		setContentsMargins(0, 0, 0, 0);
 		setCentralWidget(&gameWidget);
 		dataUpdated();
 	}
