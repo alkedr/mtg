@@ -72,7 +72,7 @@ public:
 			if (pair.first == Color::COLORLESS) {
 				colorlessCount += pair.second;
 			} else {
-				auto it = std::find_if(s.begin(), s.end(), [&](const std::pair<Color, short int> & p) { return p.first == pair.first; } );
+				auto it = std::find_if(std::begin(s), std::end(s), [&](const std::pair<Color, short int> & p) { return p.first == pair.first; } );
 				if (it == s.end()) throw ENotEnoughMana();
 				it->second -= pair.second;
 				if (it->second < 0) throw ENotEnoughMana();
@@ -321,8 +321,8 @@ public:
 
 	bool allPlayersPassed() const {
 		return std::all_of(
-			players.begin(),
-			players.end(),
+			std::begin(players),
+			std::end(players),
 			[&](const Player & p) {
 				return p.passed;
 			}

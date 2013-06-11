@@ -214,7 +214,7 @@ public:
  				    && (pCard->ownerId == forPlayer);
 			};
 
-		handLabel.setText(QString("H: ") + QString::number(std::count_if(game.cards.begin(), game.cards.end(), handPredicate)));
+		handLabel.setText(QString("H: ") + QString::number(std::count_if(std::begin(game.cards), std::end(game.cards), handPredicate)));
 
 		auto gravePredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
@@ -223,7 +223,7 @@ public:
 			};
 
 		libraryLabel.setText(QString("L: ") + QString::number(game.player(forPlayer).library.size()));
-		graveLabel.setText(QString("G: ") + QString::number(std::count_if(game.cards.begin(), game.cards.end(), gravePredicate)));
+		graveLabel.setText(QString("G: ") + QString::number(std::count_if(std::begin(game.cards), std::end(game.cards), gravePredicate)));
 		activeAndPriorityLabel.setText(
 			((game.player(forPlayer).loser) ? QString("L") : QString("")) + 
 			((game.turn.activePlayerId == forPlayer) ? QString("A") : QString("")) + 
