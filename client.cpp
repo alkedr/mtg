@@ -161,12 +161,12 @@ class TeamWidget : public QGroupBox {
 		QVBoxLayout playerLayout;
 			QLabel nameLabel;
 			QLabel hpLabel;
+			QLabel handLabel;
 			QLabel libraryLabel;
 			QLabel graveLabel;
 			QLabel activeAndPriorityLabel;
 		QGroupBox battlefieldWidget;
 		QVBoxLayout battlefieldLayout;
-			CardListWidget handWidget;
 			CardListWidget creaturesWidget;
 			CardListWidget landsWidget;
 
@@ -177,21 +177,27 @@ private slots:
 	}
 
 public: 
-	TeamWidget() {
+	TeamWidget(bool isMyTeam) {
 		setContentsMargins(0, 0, 0, 0);
 		setLayout(&teamLayout);
 		teamLayout.addWidget(&playerWidget);
 			playerWidget.setLayout(&playerLayout);
 			playerLayout.addWidget(&nameLabel);
 			playerLayout.addWidget(&hpLabel);
+			if (!isMyTeam) playerLayout.addWidget(&handLabel);
 			playerLayout.addWidget(&libraryLabel);
 			playerLayout.addWidget(&graveLabel);
 			playerLayout.addWidget(&activeAndPriorityLabel);
 			
 		teamLayout.addWidget(&battlefieldWidget, 1);
 			battlefieldWidget.setLayout(&battlefieldLayout);
-			battlefieldLayout.addWidget(&landsWidget);
-			battlefieldLayout.addWidget(&creaturesWidget);
+			if (isMyTeam) {
+				battlefieldLayout.addWidget(&creaturesWidget);
+				battlefieldLayout.addWidget(&landsWidget);
+			} else {
+				battlefieldLayout.addWidget(&landsWidget);
+				battlefieldLayout.addWidget(&creaturesWidget);
+			}
 
 		connect(&landsWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
 		connect(&creaturesWidget, SIGNAL(cardActivated(Game::CardInGameId)), this, SLOT(cardActivatedSlot(Game::CardInGameId)));
@@ -201,6 +207,14 @@ public:
 
 		nameLabel.setText(QString("Player ") + QString::number(forPlayer+1));
 		hpLabel.setText(QString("HP: ") + QString::number(game.player(forPlayer).hp));
+
+		static auto handPredicate =
+			[&](const std::unique_ptr<Game::Card> & pCard) {
+				return (pCard->position == Game::Card::Position::HAND)
+ 				    && (pCard->ownerId == forPlayer);
+			};
+
+		handLabel.setText(QString("H: ") + QString::number(std::count_if(game.cards.begin(), game.cards.end(), handPredicate)));
 
 		auto gravePredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
@@ -286,7 +300,7 @@ private slots:
 	}
 
 public: 
-	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), passButton("pass") {
+	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), passButton("pass"), myTeamWidget(true), enemyTeamWidget(false) {
 		setContentsMargins(0, 0, 0, 0);
 		setFrameShape(QFrame::NoFrame);
 		teamsWidget.setContentsMargins(0, 0, 0, 0);
