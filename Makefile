@@ -1,9 +1,11 @@
-RELEASE := y
+RELEASE := n
 BUILD_DIR := build
 
 CXX := clang++ -std=c++11
 MOC = moc
 PACK = upx --best --ultra-brute -qq
+
+SHELL := bash
 
 
 ifeq ($(RELEASE), y)
@@ -29,7 +31,7 @@ server_OBJECTS := $(BUILD_DIR)/server.o $(magic_OBJECTS)
 server_FLAGS := $(magic_FLAGS) $(server_BUILD_TYPE_FLAGS)
 server_LIBS  := $(magic_LIBS) -lboost_system
 
-client_HEADERS := $(magic_HEADERS) $(BUILD_DIR)/moc_client.cpp
+client_HEADERS := $(magic_HEADERS) moc_client.cpp
 client_SOURCES := $(magic_SOURCES) client.cpp
 client_OBJECTS := $(BUILD_DIR)/client.o $(magic_OBJECTS)
 client_FLAGS := $(magic_FLAGS) $(client_BUILD_TYPE_FLAGS) -fPIE $(shell pkg-config --cflags Qt5Gui Qt5Widgets | sed 's/-I\//-isystem\ \//g') -iquote build
@@ -42,25 +44,41 @@ test_FLAGS := $(magic_FLAGS) $(test_BUILD_TYPE_FLAGS)
 
 .PHONY : all clean
 
-all: $(BUILD_DIR)/mtg-server $(BUILD_DIR)/mtg-client $(BUILD_DIR)/mtg-test
-
+all: $(BUILD_DIR) $(BUILD_DIR)/server $(BUILD_DIR)/client $(BUILD_DIR)/unit_tests
 
 $(BUILD_DIR): Makefile
 	@mkdir -p $@
 
-$(BUILD_DIR)/moc_%.cpp: %.cpp Makefile
-	@echo "MOC     $<"
-	@$(MOC) -i $< -o $@
 
-.SECONDEXPANSION:
-
-$(BUILD_DIR)/%.o: %.cpp Makefile
+$(BUILD_DIR)/magic.o: magic.cpp magic.hpp Makefile
 	@echo "COMPILE $@"
-	@$(CXX) -c $($*_FLAGS) $< -o $@
+	@$(CXX) -c $(magic_FLAGS) $< -o $@
 
-$(BUILD_DIR)/mtg-%: $$($$*_OBJECTS) $$($$*_HEADERS) Makefile
+$(BUILD_DIR)/server.o: server.cpp magic.hpp Makefile
+	@echo "COMPILE $@"
+	@$(CXX) -c $(server_FLAGS) $< -o $@
+
+$(BUILD_DIR)/client.o: client.cpp magic.hpp Makefile
+	@echo "COMPILE $@"
+	@cat <(cat $<) <(moc $<) | $(CXX) -c -x c++ $(client_FLAGS) -o $@ -
+
+$(BUILD_DIR)/test.o: test.cpp magic.hpp Makefile
+	@echo "COMPILE $@"
+	@$(CXX) -c $(test_FLAGS) $< -o $@
+
+
+$(BUILD_DIR)/server: $(server_OBJECTS) Makefile
 	@echo "LINK    $@"
-	@$(CXX) $($*_FLAGS) $($*_LIBS) $($*_OBJECTS) -o $@
+	@$(CXX) $(server_FLAGS) $(server_LIBS) $(server_OBJECTS) -o $@
+
+$(BUILD_DIR)/client: $(client_OBJECTS) Makefile
+	@echo "LINK    $@"
+	@$(CXX) $(client_FLAGS) $(client_LIBS) $(client_OBJECTS) -o $@
+
+$(BUILD_DIR)/unit_tests: $(test_OBJECTS) Makefile
+	@echo "LINK    $@"
+	@$(CXX) $(test_FLAGS) $(test_LIBS) $(test_OBJECTS) -o $@
+
 
 clean:
 	rm -Rf $(BUILD_DIR)
