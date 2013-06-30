@@ -1,45 +1,53 @@
 #pragma once
 
+#include <array>
+#include <memory>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <algorithm>
+#include <boost/preprocessor.hpp>
+
 
 class ECardNotFound : public std::exception {
 public:
 	virtual const char * what() const noexcept { return "card not found"; }
 };
 class ECardClassNotFound : public std::exception {
-	/*const Card::Id cardId;*/ 
-public: 
-	ECardClassNotFound(/*const Card::Id _cardId*/) /*: cardId(_cardId)*/ {} 
+	/*const Card::Id cardId;*/
+public:
+	ECardClassNotFound(/*const Card::Id _cardId*/) /*: cardId(_cardId)*/ {}
 };
 class ETooMuchLandsPerTurn : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "too much lands per turn"; }
 };
 class EWrongPhase : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "wrong phase"; }
 };
 class EWrongZone : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "wrong zone"; }
 };
 class ENotYourTurn : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "not your turn"; }
 };
 class ENotYourPriority : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "not your priority"; }
 };
 class EWrongCardOwner : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "wrong card owner"; }
 };
 class EWrongCardType : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "wrong card type"; }
 };
 class ENotEnoughMana : public std::exception {
-public: 
+public:
 	virtual const char * what() const noexcept { return "not enough mana"; }
 };
 
@@ -51,7 +59,7 @@ enum Color : unsigned char {
 	, BLACK = (1 << 2)
 	, RED =   (1 << 3)
 	, GREEN = (1 << 4)
-	
+
 	, ALL = WHITE | BLUE | BLACK | RED | GREEN
 };
 
@@ -59,13 +67,13 @@ enum Color : unsigned char {
 typedef std::vector< std::pair<Color, short int> > Cost;
 
 
-class ManaPool { 
-public: 
-	Cost s; 
+class ManaPool {
+public:
+	Cost s;
 
 	void add(Color color, short int count = 1) {
 		s.emplace_back(color, count);
-	} 
+	}
 	void subtract(const Cost & cost) {
 		short int colorlessCount = 0;
 		for (const auto & pair : cost) {
@@ -105,7 +113,7 @@ public:
 	};
 
 class Card {
-	
+
 public:
 
 	typedef unsigned char SetId;
@@ -120,13 +128,13 @@ public:
 		LAND,
 		PLANESWALKER,
 		SORCERY
-	}; 
+	};
 	enum Rarity : unsigned char {
 		COMMON,
 		UNCOMMON,
 		RARE,
 		MYTHIC_RARE
-	}; 
+	};
 	enum Position : unsigned char {
 		LIBRARY,
 		HAND,
@@ -187,8 +195,8 @@ public:
 	virtual void afterUntap() {}
 
 };
-class Player { 
-public: 
+class Player {
+public:
 	typedef unsigned short HP;
 
 	std::vector<Card::Id> library;
@@ -198,7 +206,7 @@ public:
 	bool loser;
 
 	Player() : hp(20), passed(false), loser(false) {
-	} 
+	}
 };
 class Stack {
 
@@ -227,7 +235,7 @@ class Stack {
 public:
 
 	Stack() {
-	} 
+	}
 	void push(Card & card, void (Card::* const method)()) {
 		s.push_back(Entry(card, method));
 	}
@@ -257,7 +265,7 @@ public:
 		SECOND_MAIN,
 		END,
 		CLEANUP
-	}; 
+	};
 
 	static const char * phaseToString(Phase phase) {
 		static const char * s[] = {
@@ -479,23 +487,23 @@ public:
 
 	// actions of player
 	void playCardFromHand(PlayerId playerId, CardInGameId cardInGameId) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (card(cardInGameId)->ownerId != playerId) throw EWrongCardOwner();
 		card(cardInGameId)->playFromHand();
 		clearPlayerPassFlag();
 	}
 	void tap(PlayerId playerId, CardInGameId cardInGameId) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (card(cardInGameId)->ownerId != playerId) throw EWrongCardOwner();
 		card(cardInGameId)->activateAbility();
 		clearPlayerPassFlag();
 	}
 	void pass(PlayerId playerId) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
 		player(playerId).passed = true;
 		if (allPlayersPassed()) {
-			if (stack.empty()) 
+			if (stack.empty())
 				goToNextPhase();
 			else
 				stack.resolve();
@@ -506,7 +514,7 @@ public:
 		}
 	}
 	void declareAttacker(PlayerId playerId, CardInGameId cardInGameId, Target target) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (turn.activePlayerId != playerId) throw ENotYourTurn();
 		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
 		if (turn.phase != Turn::Phase::COMBAT_ATTACK) throw EWrongPhase();
@@ -515,7 +523,7 @@ public:
 		attackers.emplace_back(cardInGameId, target);
 	}
 	void declareBlocker(PlayerId playerId, CardInGameId cardInGameId, Target target) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl; 
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (turn.activePlayerId != playerId) throw ENotYourTurn();
 		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
 		if (turn.phase != Turn::Phase::COMBAT_BLOCK) throw EWrongPhase();

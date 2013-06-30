@@ -1,9 +1,1 @@
-mtg-server
-mtg-client
-mtg-test
-
-moc_*.cpp
-*.pch
-
-*.swp
-.clang_complete
+build

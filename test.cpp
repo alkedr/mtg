@@ -1,6 +1,8 @@
-namespace {
 
 #include "magic.hpp"
+
+
+namespace {
 
 
 #define CHECK(COND) if ((COND) == false) { std::cout << "FAIL: " << #COND << std::endl; }
@@ -37,12 +39,12 @@ static void test_simple() {
 
 	game.playCardFromHand(0, 1);
 
-	game.tap(0, 1); 
+	game.tap(0, 1);
 	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)1) );
 
-	game.playCardFromHand(0, 0); 
+	game.playCardFromHand(0, 0);
 	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Color::WHITE, (short)0) );
-	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)0) ); 
+	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)0) );
 
 	game.pass(0);
 	game.pass(1);

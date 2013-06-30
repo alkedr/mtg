@@ -1,7 +1,12 @@
-namespace {
+#include <cstdint>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
 #include "magic.hpp"
 
+
+
+namespace {
 
 class Session {
 	boost::asio::ip::tcp::socket socket_;
@@ -88,7 +93,7 @@ class Server {
 	void handle_accept(Session * new_session, const boost::system::error_code & error) {
 		if (!error)
 			new_session->start();
-		else 
+		else
 			delete new_session;
     	start_accept();
 	}

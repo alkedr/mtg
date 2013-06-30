@@ -1,4 +1,5 @@
-RELEASE := n
+RELEASE := y
+BUILD_DIR := build
 
 CXX := clang++ -std=c++11
 MOC = moc
@@ -6,56 +7,61 @@ PACK = upx --best --ultra-brute -qq
 
 
 ifeq ($(RELEASE), y)
-	common_BUILD_TYPE_FLAGS := -w -s -flto -fno-rtti
+	magic_BUILD_TYPE_FLAGS := -w -s -flto -fno-rtti
 	server_BUILD_TYPE_FLAGS := -O3
 	client_BUILD_TYPE_FLAGS := -Oz
 	test_BUILD_TYPE_FLAGS := -O0
 else
-	common_BUILD_TYPE_FLAGS := -Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-undefined-reinterpret-cast -O0
+	magic_BUILD_TYPE_FLAGS := -Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-undefined-reinterpret-cast -O0
 	server_BUILD_TYPE_FLAGS :=
 	client_BUILD_TYPE_FLAGS :=
 	test_BUILD_TYPE_FLAGS :=
 endif
 
-common_HEADERS := magic.hpp precompiled.hpp
-common_FLAGS := -pipe $(common_BUILD_TYPE_FLAGS) -pthread
-comman_LIBS  :=
+magic_HEADERS := magic.hpp
+magic_SOURCES := magic.cpp
+magic_OBJECTS := $(BUILD_DIR)/magic.o
+magic_FLAGS := -pipe $(magic_BUILD_TYPE_FLAGS)
 
-server_HEADERS := $(common_HEADERS) precompiled-server.hpp
-server_SOURCES := $(common_SOURCES) server.cpp
-server_FLAGS := $(common_FLAGS) $(server_BUILD_TYPE_FLAGS)
-server_LIBS  := $(comman_LIBS) -lboost_system
+server_HEADERS := $(magic_HEADERS)
+server_SOURCES := $(magic_SOURCES) server.cpp
+server_OBJECTS := $(BUILD_DIR)/server.o $(magic_OBJECTS)
+server_FLAGS := $(magic_FLAGS) $(server_BUILD_TYPE_FLAGS)
+server_LIBS  := $(magic_LIBS) -lboost_system
 
-client_HEADERS := $(common_HEADERS) precompiled-client.hpp moc_client.cpp
-client_SOURCES := $(common_SOURCES) client.cpp
-client_FLAGS := $(common_FLAGS) $(client_BUILD_TYPE_FLAGS) -fPIE $(shell pkg-config --cflags Qt5Gui Qt5Widgets | sed 's/-I\//-isystem\ \//g')
-client_LIBS  := $(common_LIBS) $(shell pkg-config --libs Qt5Gui Qt5Widgets)
+client_HEADERS := $(magic_HEADERS) $(BUILD_DIR)/moc_client.cpp
+client_SOURCES := $(magic_SOURCES) client.cpp
+client_OBJECTS := $(BUILD_DIR)/client.o $(magic_OBJECTS)
+client_FLAGS := $(magic_FLAGS) $(client_BUILD_TYPE_FLAGS) -fPIE $(shell pkg-config --cflags Qt5Gui Qt5Widgets | sed 's/-I\//-isystem\ \//g') -iquote build
+client_LIBS  := $(magic_LIBS) $(shell pkg-config --libs Qt5Gui Qt5Widgets)
 
-test_HEADERS := precompiled-test.hpp
-test_SOURCES := test.cpp
-test_FLAGS := $(common_FLAGS) $(test_BUILD_TYPE_FLAGS)
+test_HEADERS := $(magic_HEADERS)
+test_SOURCES := $(magic_SOURCES) test.cpp
+test_OBJECTS := $(BUILD_DIR)/test.o $(magic_OBJECTS)
+test_FLAGS := $(magic_FLAGS) $(test_BUILD_TYPE_FLAGS)
 
 .PHONY : all clean
 
-all: mtg-server mtg-client mtg-test
+all: $(BUILD_DIR)/mtg-server $(BUILD_DIR)/mtg-client $(BUILD_DIR)/mtg-test
 
-#test
 
-.SECONDARY:
+$(BUILD_DIR): Makefile
+	@mkdir -p $@
 
-precompiled-%.hpp.pch: precompiled-%.hpp precompiled.hpp Makefile
-	@echo PRECOMPILE $<
-	@$(CXX) $($*_FLAGS) -x c++-header $< -o $@
-
-moc_%.cpp: %.cpp Makefile
-	@echo MOC $<
+$(BUILD_DIR)/moc_%.cpp: %.cpp Makefile
+	@echo "MOC     $<"
 	@$(MOC) -i $< -o $@
 
 .SECONDEXPANSION:
-mtg-%: precompiled-%.hpp.pch $$($$*_SOURCES) $$($$*_HEADERS) Makefile
-	@echo BUILD $@
-	@$(CXX) $($*_FLAGS) $($*_LIBS) -include precompiled-$*.hpp $($*_SOURCES) -o $@
+
+$(BUILD_DIR)/%.o: %.cpp Makefile
+	@echo "COMPILE $@"
+	@$(CXX) -c $($*_FLAGS) $< -o $@
+
+$(BUILD_DIR)/mtg-%: $$($$*_OBJECTS) $$($$*_HEADERS) Makefile
+	@echo "LINK    $@"
+	@$(CXX) $($*_FLAGS) $($*_LIBS) $($*_OBJECTS) -o $@
 
 clean:
-	rm -Rf mtg-server mtg-client mtg-test moc_client.cpp 
+	rm -Rf $(BUILD_DIR)
 

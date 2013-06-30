@@ -1,6 +1,11 @@
-namespace {
 
 #include "magic.hpp"
+
+#include <QtGui>
+#include <QtWidgets>
+
+
+namespace {
 
 
 class CardWidget : public QWidget {
@@ -11,7 +16,7 @@ class CardWidget : public QWidget {
 	QColor highlightColor_;
 	bool tapped;
 
-public: 
+public:
 	CardWidget(Game::CardInGameId _cardInGameId = (Game::CardInGameId)-1, const Game::Card * card = nullptr)
 	: cardInGameId(_cardInGameId), highlightColor_(100, 0, 0, 255), tapped(false)
 	{
@@ -58,9 +63,9 @@ public:
 		p.drawPixmap(5, y+5, scaled);
 	}
 
-signals: 
-	void cardActivated(Game::CardInGameId); 
-}; 
+signals:
+	void cardActivated(Game::CardInGameId);
+};
 class CardListWidget : public QWidget {
 private:
 	class Layout : public QLayout {
@@ -80,7 +85,7 @@ private:
 			std::cout << __FUNCTION__ << " " << s.width() << "x" << s.height() << std::endl;
 			return s;
 		}
-	
+
 	public:
 		Layout() {
 		}
@@ -129,13 +134,13 @@ private:
 	Layout layout;
 	std::vector<std::unique_ptr<CardWidget>> cardWidgets;
 
-private slots: 
+private slots:
 	void cardActivatedSlot(Game::CardInGameId cardInGameId) {
 		std::cout << cardInGameId << std::endl;
 		emit cardActivated(cardInGameId);
 	}
 
-public: 
+public:
 	CardListWidget() {
 		setLayout(&layout);
 	}
@@ -150,8 +155,8 @@ public:
 		}
 	}
 
-signals: 
-	void cardActivated(Game::CardInGameId); 
+signals:
+	void cardActivated(Game::CardInGameId);
 };
 class TeamWidget : public QGroupBox {
 	Q_OBJECT
@@ -170,13 +175,13 @@ class TeamWidget : public QGroupBox {
 			CardListWidget creaturesWidget;
 			CardListWidget landsWidget;
 
-private slots: 
+private slots:
 	void cardActivatedSlot(Game::CardInGameId cardInGameId) {
 		std::cout << cardInGameId << std::endl;
 		emit cardActivated(cardInGameId);
 	}
 
-public: 
+public:
 	TeamWidget(bool isMyTeam) {
 		setContentsMargins(0, 0, 0, 0);
 		setLayout(&teamLayout);
@@ -188,7 +193,7 @@ public:
 			playerLayout.addWidget(&libraryLabel);
 			playerLayout.addWidget(&graveLabel);
 			playerLayout.addWidget(&activeAndPriorityLabel);
-			
+
 		teamLayout.addWidget(&battlefieldWidget, 1);
 			battlefieldWidget.setLayout(&battlefieldLayout);
 			if (isMyTeam) {
@@ -225,8 +230,8 @@ public:
 		libraryLabel.setText(QString("L: ") + QString::number(game.player(forPlayer).library.size()));
 		graveLabel.setText(QString("G: ") + QString::number(std::count_if(std::begin(game.cards), std::end(game.cards), gravePredicate)));
 		activeAndPriorityLabel.setText(
-			((game.player(forPlayer).loser) ? QString("L") : QString("")) + 
-			((game.turn.activePlayerId == forPlayer) ? QString("A") : QString("")) + 
+			((game.player(forPlayer).loser) ? QString("L") : QString("")) +
+			((game.turn.activePlayerId == forPlayer) ? QString("A") : QString("")) +
 			((game.turn.priorityPlayerId == forPlayer) ? QString("P") : QString(""))
 		);
 
@@ -250,9 +255,9 @@ public:
 		creaturesWidget.setCards(game.cards, creaturesPredicate);
 	}
 
-signals: 
-	void cardActivated(Game::CardInGameId); 
-}; 
+signals:
+	void cardActivated(Game::CardInGameId);
+};
 class GameWidget : public QSplitter {
 	Q_OBJECT
 
@@ -271,7 +276,7 @@ class GameWidget : public QSplitter {
 		CardListWidget stackWidget;
 		QPushButton passButton;
 
-private slots: 
+private slots:
 	void cardFromHandActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
 		try {
@@ -299,7 +304,7 @@ private slots:
 		dataUpdated();
 	}
 
-public: 
+public:
 	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), passButton("pass"), myTeamWidget(true), enemyTeamWidget(false) {
 		setContentsMargins(0, 0, 0, 0);
 		setFrameShape(QFrame::NoFrame);
@@ -352,7 +357,7 @@ class GameWindow : public QMainWindow {
 
 	GameWidget gameWidget;
 
-public: 
+public:
 	GameWindow(Game & game, Game::PlayerId forPlayer) : gameWidget(game, forPlayer) {
 		setContentsMargins(0, 0, 0, 0);
 		setCentralWidget(&gameWidget);
@@ -373,13 +378,13 @@ int main(int argc, char ** argv) {
 
 	game.players.emplace_back();
 	game.players.emplace_back();
-	game.player(0).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 }; 
-	game.player(1).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 }; 
+	game.player(0).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 };
+	game.player(1).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 };
 	game.start(0);
 
 	GameWindow gameWindow(game, 0);
 	gameWindow.show();
-	
+
 	/*MainMenuWindow mainMenuWindow;
 	mainMenuWindow.exec();
 
