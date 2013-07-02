@@ -195,8 +195,6 @@ public:
 
 		virtual Color color() const { return Color::COLORLESS; }
 
-		virtual Effects effects(CardInGameId myInGameId) const { return {}; }
-
 		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) = 0;
 		virtual void activateAbility(Impl & impl, CardInGameId myInGameId) {/* throw "card doesn't have abilities";*/}
 

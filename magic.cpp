@@ -438,23 +438,16 @@ public:                                                                         
 
 #define __EFFECT(X) effects.emplace_back(new X);
 
-#define EFFECTS(...)                                                                   \
-	virtual Game::Effects effects(Game::CardInGameId myInGameId) const override {        \
-		Game::Effects effects;                                                             \
-		MAP(__EFFECT, __VA_ARGS__);                                                        \
-		return std::move(effects);                                                         \
-	}
-
 #define PUSH_EFFECTS(...)                                                              \
 	{                                                                                    \
 		Game::Effects effects;                                                             \
 		MAP(__EFFECT, __VA_ARGS__);                                                        \
-		impl.stack.push_back(std::move(effects));                                                \
+		impl.stack.push_back(std::move(effects));                                          \
 	}
 
 #define CHECK_POSITION(VALUE, ALLOWED_VALUES)         \
 	{                                                   \
-		if ((VALUE & ALLOWED_VALUES) == 0) {                \
+		if ((VALUE & ALLOWED_VALUES) == 0) {              \
 			throw EWrongPosition(VALUE, ALLOWED_VALUES);    \
 		}                                                 \
 	}
@@ -570,9 +563,6 @@ CARD_BEGIN(Creature, 6, "Grizzly Bears", "")
 			{ Color::GREEN, 1 }
 		};
 	}
-	EFFECTS(
-		MoveCardEffect(myInGameId, myInGameId, Position::BATTLEFIELD)
-	)
 CARD_END
 
 
@@ -590,5 +580,3 @@ static Game::Card * newCardHelper(const Game::Card::Id cardId, Game::PlayerId ow
 std::unique_ptr<Game::Card> Game::newCard(const Game::Card::Id cardId, Game::PlayerId ownerId) {
 	return std::move(std::unique_ptr<Game::Card>(newCardHelper(cardId, ownerId)));
 }
-
-#undef CARD
