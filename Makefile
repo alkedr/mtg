@@ -14,7 +14,7 @@ ifeq ($(RELEASE), y)
 	client_BUILD_TYPE_FLAGS := -Oz
 	test_BUILD_TYPE_FLAGS := -O0
 else
-	magic_BUILD_TYPE_FLAGS := -Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-undefined-reinterpret-cast -O0
+	magic_BUILD_TYPE_FLAGS := -O0 -ggdb3 -Weverything -Wno-unused-parameter -Wno-unused-macros -Wno-unused-member-function -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-undefined-reinterpret-cast
 	server_BUILD_TYPE_FLAGS :=
 	client_BUILD_TYPE_FLAGS :=
 	test_BUILD_TYPE_FLAGS :=

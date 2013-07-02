@@ -47,7 +47,7 @@ public:
 	}
 
 	void paintEvent(QPaintEvent * event) override {
-		std::cout << __FUNCTION__ << " w: " << width() << " h:" << height() << " r: " << (double)width()/height() << std::endl;
+		// std::cout << __FUNCTION__ << " w: " << width() << " h:" << height() << " r: " << (double)width()/height() << std::endl;
 		QPainter p(this);
 		//p.setBrush(QBrush(QColor(0, 0, 0, 255)));
 		//p.drawRect(0, 0, width(), height());
@@ -80,9 +80,9 @@ private:
 			for (QLayoutItem * item : list) {
 				s += QSize(item->widget()->sizeIncrement().width(), 0);
 			}
-			std::cout << __FUNCTION__ << " " << s.width() << "x" << s.height() << std::endl;
+			// std::cout << __FUNCTION__ << " " << s.width() << "x" << s.height() << std::endl;
 			s.scale(geometry().width(), geometry().height(), Qt::KeepAspectRatio);
-			std::cout << __FUNCTION__ << " " << s.width() << "x" << s.height() << std::endl;
+			// std::cout << __FUNCTION__ << " " << s.width() << "x" << s.height() << std::endl;
 			return s;
 		}
 
@@ -115,13 +115,13 @@ private:
 			QLayout::setGeometry(rect);
 
 			double scaleRatio = (double)rect.height() / 88;
-			std::cout << __FUNCTION__ << " ratio: " << scaleRatio << std::endl;
+			// std::cout << __FUNCTION__ << " ratio: " << scaleRatio << std::endl;
 
 			int x = 0;
 			for (QLayoutItem * item : list) {
 				int itemWidth = (int)(item->widget()->sizeIncrement().width() * scaleRatio);
 				int itemHeight = (int)(item->widget()->sizeIncrement().height() * scaleRatio);
-				std::cout << __FUNCTION__ << " " << "w: " << itemWidth << " h: " << itemHeight << std::endl;
+				// std::cout << __FUNCTION__ << " " << "w: " << itemWidth << " h: " << itemHeight << std::endl;
 				item->setGeometry(QRect(x, 0, itemWidth, itemHeight));
 				x += itemWidth+10;
 			}
@@ -215,44 +215,62 @@ public:
 
 		static auto handPredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
-				return (pCard->position == Game::Card::Position::HAND)
- 				    && (pCard->ownerId == forPlayer);
+				return (pCard->position() == Game::Card::Position::HAND)
+ 				    && (pCard->ownerId() == forPlayer);
 			};
 
-		handLabel.setText(QString("H: ") + QString::number(std::count_if(std::begin(game.cards), std::end(game.cards), handPredicate)));
+		handLabel.setText(
+			QString("H: ") +
+			QString::number(
+				std::count_if(
+					std::begin(game.cards()),
+					std::end(game.cards()),
+					handPredicate
+				)
+			)
+		);
 
 		auto gravePredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
-				return (pCard->position == Game::Card::Position::LIBRARY)
-				    && (pCard->ownerId == forPlayer);
+				return (pCard->position() == Game::Card::Position::LIBRARY)
+				    && (pCard->ownerId() == forPlayer);
 			};
 
 		libraryLabel.setText(QString("L: ") + QString::number(game.player(forPlayer).library.size()));
-		graveLabel.setText(QString("G: ") + QString::number(std::count_if(std::begin(game.cards), std::end(game.cards), gravePredicate)));
+		graveLabel.setText(
+			QString("G: ") +
+			QString::number(
+				std::count_if(
+					std::begin(game.cards()),
+					std::end(game.cards()),
+					gravePredicate
+				)
+			)
+		);
 		activeAndPriorityLabel.setText(
 			((game.player(forPlayer).loser) ? QString("L") : QString("")) +
-			((game.turn.activePlayerId == forPlayer) ? QString("A") : QString("")) +
-			((game.turn.priorityPlayerId == forPlayer) ? QString("P") : QString(""))
+			((game.turn().activePlayerId == forPlayer) ? QString("A") : QString("")) +
+			((game.turn().priorityPlayerId == forPlayer) ? QString("P") : QString(""))
 		);
 
 		auto landsPredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
-				return (pCard->position == Game::Card::Position::BATTLEFIELD)
- 				    && (pCard->ownerId == forPlayer)
-					&& (pCard->getType() == Game::Card::Type::LAND);
+				return (pCard->position() == Game::Card::Position::BATTLEFIELD)
+ 				    && (pCard->ownerId() == forPlayer)
+					&& (pCard->type() == Game::Card::Type::LAND);
 			};
 
-		landsWidget.setCards(game.cards, landsPredicate);
+		landsWidget.setCards(game.cards(), landsPredicate);
 
 
 		auto creaturesPredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
-				return (pCard->position == Game::Card::Position::BATTLEFIELD)
- 				    && (pCard->ownerId == forPlayer)
-					&& (pCard->getType() == Game::Card::Type::CREATURE);
+				return (pCard->position() == Game::Card::Position::BATTLEFIELD)
+ 				    && (pCard->ownerId() == forPlayer)
+					&& (pCard->type() == Game::Card::Type::CREATURE);
 			};
 
-		creaturesWidget.setCards(game.cards, creaturesPredicate);
+		creaturesWidget.setCards(game.cards(), creaturesPredicate);
 	}
 
 signals:
@@ -289,7 +307,7 @@ private slots:
 	void cardFromBattlefieldActivated(Game::CardInGameId cardInGameId) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << cardInGameId << std::endl;
 		try {
-			game.tap(forPlayer, cardInGameId);
+			game.activateAbility(forPlayer, cardInGameId);
 		} catch (const std::exception & e) {
 			QMessageBox(QMessageBox::Critical, "Error", e.what(), QMessageBox::Close).exec();
 		}
@@ -305,7 +323,7 @@ private slots:
 	}
 
 public:
-	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), passButton("pass"), myTeamWidget(true), enemyTeamWidget(false) {
+	GameWidget(Game & _game, Game::PlayerId _forPlayer) : game(_game), forPlayer(_forPlayer), myTeamWidget(true), enemyTeamWidget(false), passButton("pass") {
 		setContentsMargins(0, 0, 0, 0);
 		setFrameShape(QFrame::NoFrame);
 		teamsWidget.setContentsMargins(0, 0, 0, 0);
@@ -329,27 +347,27 @@ public:
 	}
 
 	void dataUpdated() {
-		forPlayer = game.turn.priorityPlayerId;
+		forPlayer = game.turn().priorityPlayerId;
 
 		static auto handPredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
-				return (pCard->position == Game::Card::Position::HAND)
- 				    && (pCard->ownerId == forPlayer);
+				return (pCard->position() == Game::Card::Position::HAND)
+ 				    && (pCard->ownerId() == forPlayer);
 			};
 
 		static auto stackPredicate =
 			[&](const std::unique_ptr<Game::Card> & pCard) {
-				return (pCard->position == Game::Card::Position::STACK);
+				return (pCard->position() == Game::Card::Position::STACK);
 			};
 
-		myHandWidget.setCards(game.cards, handPredicate);
+		myHandWidget.setCards(game.cards(), handPredicate);
 
 		myTeamWidget.set(game, forPlayer);
 		enemyTeamWidget.set(game, 1-forPlayer);
 
-		stackWidget.setCards(game.cards, stackPredicate);
+		stackWidget.setCards(game.cards(), stackPredicate);
 
-		phaseLabel.setText(Game::Turn::phaseToString(game.turn.phase));
+		phaseLabel.setText(Game::Turn::phaseToString(game.turn().phase));
 	}
 };
 class GameWindow : public QMainWindow {
@@ -376,8 +394,8 @@ int main(int argc, char ** argv) {
 
 	Game game;
 
-	game.players.emplace_back();
-	game.players.emplace_back();
+	game.players().emplace_back();
+	game.players().emplace_back();
 	game.player(0).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 };
 	game.player(1).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 };
 	game.start(0);

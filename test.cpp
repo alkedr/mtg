@@ -16,30 +16,31 @@ static void print_sizes() {
 	std::cout << "sizeof(Game::Stack): " << sizeof(Game::Stack) << std::endl;
 	std::cout << "sizeof(Game::Card): " << sizeof(Game::Card) << std::endl;
 }
+
 static void test_simple() {
 	Game game;
-	game.players.emplace_back();
-	game.players.emplace_back();
+	game.players().emplace_back();
+	game.players().emplace_back();
 
 	game.player(0).library = { 1, 2, 3, 4, 5, 6 };
 
 	game.start(0);
 
-	CHECK_EQUAL( game.card(0)->getId(), 6 );
-	CHECK_EQUAL( game.card(1)->getId(), 5 );
-	CHECK_EQUAL( game.card(2)->getId(), 4 );
-	CHECK_EQUAL( game.card(3)->getId(), 3 );
-	CHECK_EQUAL( game.card(4)->getId(), 2 );
-	CHECK_EQUAL( game.card(5)->getId(), 1 );
+	CHECK_EQUAL( game.card(0).id(), 6 );
+	CHECK_EQUAL( game.card(1).id(), 5 );
+	CHECK_EQUAL( game.card(2).id(), 4 );
+	CHECK_EQUAL( game.card(3).id(), 3 );
+	CHECK_EQUAL( game.card(4).id(), 2 );
+	CHECK_EQUAL( game.card(5).id(), 1 );
 
 	game.playCardFromHand(0, 5);
 
-	game.tap(0, 5);
+	game.activateAbility(0, 5);
 	CHECK( game.player(0).manaPool.s.at(0) == std::make_pair(Color::WHITE, (short)1) );
 
 	game.playCardFromHand(0, 1);
 
-	game.tap(0, 1);
+	game.activateAbility(0, 1);
 	CHECK( game.player(0).manaPool.s.at(1) == std::make_pair(Color::GREEN, (short)1) );
 
 	game.playCardFromHand(0, 0);

@@ -112,8 +112,7 @@ const char server_version[] = "1.0";
 }
 
 int main(/*int argc, const char ** argv*/) {
-	Game g;
-	auto c = Game::newCard(1, g, 0);
+	auto c = Game::newCard(1, 0);
 
 	std::cout << server_name << " v" << server_version << std::endl;
 	//std::cout << "cards: " << cardAllocators.size() << std::endl;
