@@ -54,6 +54,8 @@ public:
 };
 
 
+
+
 enum Color : unsigned char {
 	  COLORLESS = 0
 	, WHITE = (1 << 0)
@@ -309,3 +311,17 @@ private:
 	std::unique_ptr<Impl> pimpl;
 };
 
+
+
+
+
+class EWrongPosition : public std::exception {
+	const Game::Card::Position position_;
+	const Game::Card::Position possiblePositions_;
+public:
+	EWrongPosition(Game::Card::Position position, Game::Card::Position possiblePositions)
+	 : position_(position), possiblePositions_(possiblePositions) {}
+
+	Game::Card::Position position() const { return position_; }
+	Game::Card::Position possiblePositions() const { return possiblePositions_; }
+};

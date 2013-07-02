@@ -253,17 +253,34 @@ void Game::Effect::resolve(Impl & impl)
 
 
 class AddManaEffect : public Game::Effect {
-	Color color_;
 	Game::PlayerId targetPlayerId_;
+	Color color_;
 public:
 	AddManaEffect(Game::CardInGameId source, Game::PlayerId targetPlayerId, Color color)
 	 : Game::Effect(source)
+	 , targetPlayerId_(targetPlayerId)
 	 , color_(color)
-	 , targetPlayerId_(targetPlayerId) {}
+	{}
 
 	virtual void onResolve(Game::Impl & impl) {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		impl.players.at(targetPlayerId_).manaPool.add(color_);
+	}
+};
+
+class TakeManaEffect : public Game::Effect {
+	Game::PlayerId targetPlayerId_;
+	Game::Cost cost_;
+public:
+	TakeManaEffect(Game::CardInGameId source, Game::PlayerId targetPlayerId, Game::Cost cost)
+	 : Game::Effect(source)
+	 , targetPlayerId_(targetPlayerId)
+	 , cost_(cost)
+	{}
+
+	virtual void onResolve(Game::Impl & impl) {
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
+		impl.players.at(targetPlayerId_).manaPool.subtract(cost_);
 	}
 };
 
@@ -356,196 +373,151 @@ void Game::pass(PlayerId playerId) {
 
 
 
-	template <Game::Card::Id _id> class CardHelper : public Game::Card {
+template <Game::Card::Id _id> class CardHelper : public Game::Card {
 
-	public:
+public:
 
-		virtual Type type() const override { return Type::LAND; }
+	virtual Type type() const override { return Type::LAND; }
 
-		virtual Id id() const override { return _id; }
-		virtual const char * name() const { return "Unknown Card"; }
-		virtual const char * description() const { return "Unknown"; }
+	virtual Id id() const override { return _id; }
+	virtual const char * name() const { return "Unknown Card"; }
+	virtual const char * description() const { return "Unknown"; }
 
-		virtual const std::string getImageName() const { return ""; }   // FIXME: image for unknown card
+	virtual const std::string getImageName() const { return ""; }   // FIXME: image for unknown card
 
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) override {}
+	virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) override {}
 
-		CardHelper(Game::PlayerId ownerId)
-		: Card(ownerId) {}
-	};
+	CardHelper(Game::PlayerId ownerId)
+	: Card(ownerId) {}
+};
 
 
-	#define CARD_BEGIN(BASE, ID, NAME, DESCRIPTION)                                                              \
-	template<> class CardHelper<ID> : public BASE {                                                              \
-	public:                                                                                                      \
-		CardHelper<ID>(Game::PlayerId & ownerId)                                                                   \
-		: BASE(ownerId) {}                                                                                         \
-		GETTER_TYPE_SIMPLE(Id, id, ID)                                                                             \
-		GETTER_TYPE_SIMPLE(const char *, name, NAME)                                                               \
-		GETTER_TYPE_SIMPLE(const char *, description, DESCRIPTION)
+#define CARD_BEGIN(BASE, ID, NAME, DESCRIPTION)                                                              \
+template<> class CardHelper<ID> : public BASE {                                                              \
+public:                                                                                                      \
+	CardHelper<ID>(Game::PlayerId & ownerId)                                                                   \
+	: BASE(ownerId) {}                                                                                         \
+	GETTER_TYPE_SIMPLE(Id, id, ID)                                                                             \
+	GETTER_TYPE_SIMPLE(const char *, name, NAME)                                                               \
+	GETTER_TYPE_SIMPLE(const char *, description, DESCRIPTION)
 
-	#define CARD_END  };
+#define CARD_END  };
 
 
 
-	#define EVAL0(...) __VA_ARGS__
-	#define EVAL1(...) EVAL0 (EVAL0 (EVAL0 (__VA_ARGS__)))
-	#define EVAL2(...) EVAL1 (EVAL1 (EVAL1 (__VA_ARGS__)))
-	#define EVAL3(...) EVAL2 (EVAL2 (EVAL2 (__VA_ARGS__)))
-	#define EVAL4(...) EVAL3 (EVAL3 (EVAL3 (__VA_ARGS__)))
-	#define EVAL(...) EVAL4 (EVAL4 (EVAL4 (__VA_ARGS__)))
+#define EVAL0(...) __VA_ARGS__
+#define EVAL1(...) EVAL0 (EVAL0 (EVAL0 (__VA_ARGS__)))
+#define EVAL2(...) EVAL1 (EVAL1 (EVAL1 (__VA_ARGS__)))
+#define EVAL3(...) EVAL2 (EVAL2 (EVAL2 (__VA_ARGS__)))
+#define EVAL4(...) EVAL3 (EVAL3 (EVAL3 (__VA_ARGS__)))
+#define EVAL(...) EVAL4 (EVAL4 (EVAL4 (__VA_ARGS__)))
 
-	#define MAP_END(...)
+#define MAP_END(...)
 
-	#define MAP_OUT
-	#define MAP_GET_END() 0, MAP_END
-	#define MAP_NEXT0(item, next, ...) next MAP_OUT
-	#define MAP_NEXT1(item, next) MAP_NEXT0 (item, next, 0)
-	#define MAP_NEXT(item, next) MAP_NEXT1 (MAP_GET_END item, next)
+#define MAP_OUT
+#define MAP_GET_END() 0, MAP_END
+#define MAP_NEXT0(item, next, ...) next MAP_OUT
+#define MAP_NEXT1(item, next) MAP_NEXT0 (item, next, 0)
+#define MAP_NEXT(item, next) MAP_NEXT1 (MAP_GET_END item, next)
 
-	#define MAP0(f, x, peek, ...) f(x) MAP_NEXT (peek, MAP1) (f, peek, __VA_ARGS__)
-	#define MAP1(f, x, peek, ...) f(x) MAP_NEXT (peek, MAP0) (f, peek, __VA_ARGS__)
-	#define MAP(f, ...) EVAL (MAP1 (f, __VA_ARGS__, (), 0))
+#define MAP0(f, x, peek, ...) f(x) MAP_NEXT (peek, MAP1) (f, peek, __VA_ARGS__)
+#define MAP1(f, x, peek, ...) f(x) MAP_NEXT (peek, MAP0) (f, peek, __VA_ARGS__)
+#define MAP(f, ...) EVAL (MAP1 (f, __VA_ARGS__, (), 0))
 
 
 
 
-	#define OVERRIDE(RETURN_VALUE, FUNCTION_NAME, ATTRIBUTES, ...) virtual RETURN_VALUE FUNCTION_NAME(__VA_ARGS__) ATTRIBUTES override final
+#define OVERRIDE(RETURN_VALUE, FUNCTION_NAME, ATTRIBUTES, ...) virtual RETURN_VALUE FUNCTION_NAME(__VA_ARGS__) ATTRIBUTES override final
 
-	#define GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) OVERRIDE(TYPE_NAME, PROPERTY_NAME, const, )
-	#define GETTER_TYPE_SIMPLE(TYPE_NAME, PROPERTY_NAME, VALUE) GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) { return VALUE; }
+#define GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) OVERRIDE(TYPE_NAME, PROPERTY_NAME, const, )
+#define GETTER_TYPE_SIMPLE(TYPE_NAME, PROPERTY_NAME, VALUE) GETTER_TYPE(TYPE_NAME, PROPERTY_NAME) { return VALUE; }
 
-	#define COLOR(VALUE) GETTER_TYPE_SIMPLE(Color, color, VALUE)
-	#define POWER(VALUE) GETTER_TYPE_SIMPLE(Power, power, VALUE)
-	#define TOUGHNESS(VALUE) GETTER_TYPE_SIMPLE(Toughness, toughness, VALUE)
+#define COLOR(VALUE) GETTER_TYPE_SIMPLE(Color, color, VALUE)
+#define POWER(VALUE) GETTER_TYPE_SIMPLE(Power, power, VALUE)
+#define TOUGHNESS(VALUE) GETTER_TYPE_SIMPLE(Toughness, toughness, VALUE)
 
-	#define __EFFECT(X) effects.emplace_back(new X);
+#define __EFFECT(X) effects.emplace_back(new X);
 
-	#define EFFECTS(...)                                                                   \
-		virtual Game::Effects effects(Game::CardInGameId myInGameId) const override {        \
-			Game::Effects effects;                                                             \
-			MAP(__EFFECT, __VA_ARGS__);                                                        \
-			return std::move(effects);                                                         \
-		}
+#define EFFECTS(...)                                                                   \
+	virtual Game::Effects effects(Game::CardInGameId myInGameId) const override {        \
+		Game::Effects effects;                                                             \
+		MAP(__EFFECT, __VA_ARGS__);                                                        \
+		return std::move(effects);                                                         \
+	}
 
-	#define PUSH_EFFECTS(...)                                                              \
-		{                                                                                    \
-			Game::Effects effects;                                                             \
-			MAP(__EFFECT, __VA_ARGS__);                                                        \
-			impl.stack.push_back(std::move(effects));                                                \
-		}
+#define PUSH_EFFECTS(...)                                                              \
+	{                                                                                    \
+		Game::Effects effects;                                                             \
+		MAP(__EFFECT, __VA_ARGS__);                                                        \
+		impl.stack.push_back(std::move(effects));                                                \
+	}
 
+#define CHECK_POSITION(VALUE, ALLOWED_VALUES)         \
+	{                                                   \
+		if ((VALUE & ALLOWED_VALUES) == 0) {                \
+			throw EWrongPosition(VALUE, ALLOWED_VALUES);    \
+		}                                                 \
+	}
 
 
 
-	class Artifact : public Game::Card {
+class Artifact : public Game::Card {
+public:
+	virtual Type type() const override { return Type::ARTIFACT; }
+};
 
-	public:
+class Creature : public Game::Card {
+public:
+	typedef short Power;
+	typedef short Toughness;
 
-		virtual Type type() const override { return Type::ARTIFACT; }
+	virtual Type type() const override { return Type::CREATURE; }
 
-	};
-
-	class Creature : public Game::Card {
-
-	public:
-
-		typedef short Power;
-		typedef short Toughness;
-
-
-		virtual Type type() const override { return Type::CREATURE; }
-
-		virtual Power power() const = 0;
-		virtual Toughness toughness() const = 0;
-
-		virtual Game::Cost cost() const = 0;
-
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId)
-		{
-			/*std::cout << __PRETTY_FUNCTION__ << std::endl;
-			owner().manaPool.subtract(getCost());
-			game.stack().push(*this, &Card::moveToBattlefield);
-			position = Position::STACK;*/
-		}
-
-
-		Creature(Game::PlayerId ownerId)
-		: Card(ownerId) {}
-	};
-
-	class Enchantment : public Game::Card {
-
-	public:
-
-		virtual Type type() const override { return Type::ENCHANTMENT; }
-
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId)
-		{
-			//game.stack.push(new PlayCardEffect(*this));
-		}
-	};
-
-	class Instant : public Game::Card {
-
-	public:
-
-		virtual Type type() const override { return Type::INSTANT; }
-
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId)
-		{
-			//game.stack.push(new PlayCardEffect(*this));
-		}
-	};
-
-	class Land : public Game::Card {
-
-	public:
-
-		virtual Type type() const override { return Type::LAND; }
-
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) {
-			/*std::cout << __PRETTY_FUNCTION__ << std::endl;
-			if (position != Card::Position::HAND) throw EWrongZone();
-			if (ownerId != game.turn().activePlayerId) throw ENotYourTurn();
-			if ((game.turn().phase != Game::Turn::Phase::FIRST_MAIN) && (game.turn().phase != Game::Turn::Phase::SECOND_MAIN)) throw EWrongPhase();
-			if (game.landsPlayedThisTurn_ >= game.maxLandsPerTurn_) throw ETooMuchLandsPerTurn();
-			game.landsPlayedThisTurn_++;
-			position = Position::BATTLEFIELD;*/
-		}
-
-		// virtual void activateAbility() override {
-			/*std::cout << __PRETTY_FUNCTION__ << std::endl;
-			tapped_ = true;
-			afterTap();*/
-		// }
-
-
-		Land(Game::PlayerId ownerId)
-		: Card(ownerId) {}
-	};
-
-	class Planeswalker : public Game::Card {
-
-	public:
-
-		virtual Type type() const override { return Type::PLANESWALKER; }
-
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) {
-			//game.stack.push(new PlayCardEffect(*this));
-		}
-	};
-
-	class Sorcery : public Game::Card {
-
-	public:
-
-		virtual Type type() const override { return Type::SORCERY; }
-
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) {
-			//game.stack.push(new PlayCardEffect(*this));
-		}
-	};
+	virtual Power power() const = 0;
+	virtual Toughness toughness() const = 0;
+
+	virtual Game::Cost cost() const = 0;
+
+	virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) override {
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
+		CHECK_POSITION(position(), Position::HAND);
+		TakeManaEffect(myInGameId, ownerId(), cost()).resolve(impl);
+		PUSH_EFFECTS(
+			MoveCardEffect(myInGameId, myInGameId, Position::BATTLEFIELD)
+		)
+	}
+
+	Creature(Game::PlayerId ownerId)
+	: Card(ownerId) {}
+};
+
+class Enchantment : public Game::Card {
+public:
+	virtual Type type() const override { return Type::ENCHANTMENT; }
+};
+
+class Instant : public Game::Card {
+public:
+	virtual Type type() const override { return Type::INSTANT; }
+};
+
+class Land : public Game::Card {
+public:
+	virtual Type type() const override { return Type::LAND; }
+
+	Land(Game::PlayerId ownerId)
+	: Card(ownerId) {}
+};
+
+class Planeswalker : public Game::Card {
+public:
+	virtual Type type() const override { return Type::PLANESWALKER; }
+};
+
+class Sorcery : public Game::Card {
+public:
+	virtual Type type() const override { return Type::SORCERY; }
+};
 
 
 
@@ -555,11 +527,13 @@ public:
 	: Land(ownerId) {}
 
 	virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) override {
-		if (position() != Position::HAND) throw EWrongZone();
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
+		CHECK_POSITION(position(), Position::HAND);
 		MoveCardEffect(myInGameId, myInGameId, Position::BATTLEFIELD).resolve(impl);
 	}
 	virtual void activateAbility(Game::Impl & impl, Game::CardInGameId myInGameId) override {
-		if (position() != Position::BATTLEFIELD) throw EWrongZone();
+		std::cout << __PRETTY_FUNCTION__ << std::endl;
+		CHECK_POSITION(position(), Position::BATTLEFIELD);
 		if (tapped() != false) throw EAlreadyTapped();
 		SetTapEffect(myInGameId, myInGameId, true).resolve(impl);
 		AddManaEffect(myInGameId, ownerId(), color_).resolve(impl);
@@ -569,33 +543,27 @@ public:
 
 
 
-CARD_BEGIN(BasicLand<Color::WHITE>,  1, "Plains",   "Plains")
+CARD_BEGIN(BasicLand<Color::WHITE>, 1, "Plains",   "Plains")
 CARD_END
 
-CARD_BEGIN(BasicLand<Color::BLUE>,   2, "Island",   "Island")
+CARD_BEGIN(BasicLand<Color::BLUE>,  2, "Island",   "Island")
 CARD_END
 
-CARD_BEGIN(BasicLand<Color::BLACK>,  3, "Swamp",    "Swamp")
+CARD_BEGIN(BasicLand<Color::BLACK>, 3, "Swamp",    "Swamp")
 CARD_END
 
-CARD_BEGIN(BasicLand<Color::RED>,    4, "Mountain", "Mountain")
+CARD_BEGIN(BasicLand<Color::RED>,   4, "Mountain", "Mountain")
 CARD_END
 
-CARD_BEGIN(BasicLand<Color::GREEN>,  5, "Forest",   "Forest")
+CARD_BEGIN(BasicLand<Color::GREEN>, 5, "Forest",   "Forest")
 CARD_END
 
 
 
 
-CARD_BEGIN(Creature,   6, "Grizzly Bears", "")
+CARD_BEGIN(Creature, 6, "Grizzly Bears", "")
 	POWER(2)
 	TOUGHNESS(2)
-	virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) override {
-		if (position() != Position::HAND) throw EWrongZone();
-		PUSH_EFFECTS(
-			MoveCardEffect(myInGameId, myInGameId, Position::BATTLEFIELD)
-		)
-	}
 	virtual Game::Cost cost() const {
 		return Game::Cost {
 			{ Color::COLORLESS, 1 },
