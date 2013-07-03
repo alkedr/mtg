@@ -3,8 +3,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <algorithm>
 
 
 class ECardNotFound : public std::exception {
@@ -84,29 +82,8 @@ public:
 	public:
 		Cost s;
 
-		void add(Color color, short int count = 1) {
-			s.emplace_back(color, count);
-		}
-		void subtract(const Cost & cost) {
-			short int colorlessCount = 0;
-			for (const auto & pair : cost) {
-				if (pair.first == Color::COLORLESS) {
-					colorlessCount += pair.second;
-				} else {
-					auto it = std::find_if(std::begin(s), std::end(s), [&](const std::pair<Color, short int> & p) { return p.first == pair.first; } );
-					if (it == s.end()) throw ENotEnoughMana();
-					it->second -= pair.second;
-					if (it->second < 0) throw ENotEnoughMana();
-				}
-			}
-			for (auto & pair : s) {
-				int a = std::min(colorlessCount, pair.second);
-				pair.second -= a;
-				colorlessCount -= a;
-			}
-			if (colorlessCount > 0) throw ENotEnoughMana();
-		}
-
+		void add(Color color, short int count = 1);
+		void subtract(const Cost & cost);
 	};
 
 
@@ -137,8 +114,6 @@ public:
 
 	class Card {
 	public:
-		typedef unsigned char SetId;
-		typedef unsigned char CardInSetId;
 		typedef unsigned short Id;
 
 		enum Type : unsigned char {
@@ -150,6 +125,7 @@ public:
 			PLANESWALKER,
 			SORCERY
 		};
+
 		enum Position : unsigned char {
 			LIBRARY,
 			HAND,
@@ -159,16 +135,14 @@ public:
 			EXILE
 		};
 
-	public:
+	private:
 		PlayerId ownerId_;
 		Position position_;
 		bool tapped_;
 
 	public:
 		Position position() const { return position_; }
-		void setPosition(Position value) {
-			position_ = value;
-		}
+		void setPosition(Position value) { position_ = value; }
 
 		PlayerId ownerId() const { return ownerId_; }
 

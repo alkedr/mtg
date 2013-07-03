@@ -1,8 +1,33 @@
 #include "magic.hpp"
 
 #include <boost/preprocessor.hpp>
+#include <algorithm>
+#include <iostream>
 
 
+
+void Game::ManaPool::add(Color color, short int count) {
+	s.emplace_back(color, count);
+}
+void Game::ManaPool::subtract(const Cost & cost) {
+	short int colorlessCount = 0;
+	for (const auto & pair : cost) {
+		if (pair.first == Color::COLORLESS) {
+			colorlessCount += pair.second;
+		} else {
+			auto it = std::find_if(std::begin(s), std::end(s), [&](const std::pair<Color, short int> & p) { return p.first == pair.first; } );
+			if (it == s.end()) throw ENotEnoughMana();
+			it->second -= pair.second;
+			if (it->second < 0) throw ENotEnoughMana();
+		}
+	}
+	for (auto & pair : s) {
+		int a = std::min(colorlessCount, pair.second);
+		pair.second -= a;
+		colorlessCount -= a;
+	}
+	if (colorlessCount > 0) throw ENotEnoughMana();
+}
 
 
 class Game::Impl {

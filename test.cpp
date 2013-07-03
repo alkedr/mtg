@@ -1,5 +1,6 @@
-
 #include "magic.hpp"
+
+#include <iostream>
 
 
 namespace {

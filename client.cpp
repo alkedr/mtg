@@ -3,6 +3,7 @@
 
 #include <QtGui>
 #include <QtWidgets>
+#include <iostream>
 
 
 namespace {
