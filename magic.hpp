@@ -5,6 +5,7 @@
 #include <vector>
 
 
+// temporary {
 class ECardNotFound : public std::exception {
 public:
 	virtual const char * what() const noexcept { return "card not found"; }
@@ -50,6 +51,7 @@ class EAlreadyTapped : public std::exception {
 public:
 	virtual const char * what() const noexcept { return "already tapped"; }
 };
+// }
 
 
 
@@ -69,14 +71,11 @@ enum Color : unsigned char {
 
 
 class Game {
-
 public:
-
 	class Impl;
 
 
 	typedef std::vector< std::pair<Color, short int> > Cost;
-
 
 	class ManaPool {
 	public:
@@ -90,7 +89,6 @@ public:
 	class Player;
 
 	typedef unsigned char PlayerId;
-	typedef unsigned char TeamId;
 	typedef size_t CardInGameId;
 
 
@@ -104,6 +102,8 @@ public:
 		void resolve(Impl & impl);
 
 		virtual void onResolve(Impl & impl) {}
+
+		// TODO: on*
 
 	private:
 		CardInGameId source_;

@@ -1,12 +1,6 @@
-userdata:
-	one of several effects
-	any number of targets  Card::canBeTarget
-	X of mana
-
-
 Once a triggered ability triggers or an activated ability is activated,
-it will resolve unless it’s countered; it doesn’t matter what happens to 
-the source of the ability once the ability goes on the stack.  - shared_ptr<Card>, 2 ссылки - Stack и Battlefield/Graveyard/Exile
+it will resolve unless it’s countered; it doesn’t matter what happens to
+the source of the ability once the ability goes on the stack.
 
 combat:
 	beforeAttack (for every card, instantly)
@@ -20,55 +14,16 @@ combat:
 	afterDealDamage
 
 
-
-двойные карты, flip
-
 параметры спеллов и способностей получать через Game
 template <class Getter> Game {...
 
-выкладывание карты (не земли):
-	beforePlayCard()
-	удалить из руки
-	положить на стек
-	afterPlayCard()
-
-
-активирование способности (тап):
-	beforeTap()
-	повернуть
-	положить на стек
-	afterTap()
-
-
-resolve():
-	call resolve() for each effect on stack
-
-
-spell/...:
-	положить на стек
-
-	
 
 signals
 client - server
 more cards
 windows build
-sidebar
-CardWidget
 
 
-
-
-
-
-
-
-
-
-
-
-события для триггеров - элементы истории игры
-ЦИКЛЫ ТРИГГЕРОВ
 
 struct Ability     http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=241108
 
@@ -85,15 +40,14 @@ struct Ability     http://gatherer.wizards.com/Pages/Card/Details.aspx?multivers
 wiki page with status of rules and cards
 rules - implemented/must be implemented in card/not implemented
 cards - implemented/not implemented
-'
 
 
 
-106.6. Some spells or abilities that produce mana restrict how that mana can be spent, or have an 
-additional effect that affects the spell or ability that mana is spent on. This doesn’t affect the mana’s 
+106.6. Some spells or abilities that produce mana restrict how that mana can be spent, or have an
+additional effect that affects the spell or ability that mana is spent on. This doesn’t affect the mana’s
 type.
 
-106.9. If an effect would add mana represented by a Phyrexian mana symbol to a player’s mana pool, 
+106.9. If an effect would add mana represented by a Phyrexian mana symbol to a player’s mana pool,
 one mana of the color of that symbol is added to that player’s mana pool.
 
 Phyrexian - окошко, в котором все варианты оплаты
@@ -101,15 +55,6 @@ Snow - 106.6
 
 
 Tokens aren't cards!
-
-
-
-
-
-Card::castAsLand()
-Card::castAsInstant()
-Card::castAsUsual()
-
 
 
 
