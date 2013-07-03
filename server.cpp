@@ -1,8 +1,8 @@
+#include "magic.hpp"
+
 #include <cstdint>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-
-#include "magic.hpp"
 
 
 
@@ -115,10 +115,10 @@ int main(/*int argc, const char ** argv*/) {
 	auto c = Game::newCard(1, 0);
 
 	std::cout << server_name << " v" << server_version << std::endl;
-	//std::cout << "cards: " << cardAllocators.size() << std::endl;
 
 	boost::asio::io_service io_service;
 	Server server(io_service, 5643);
 	io_service.run();
 	return 0;
 }
+

@@ -5,6 +5,7 @@
 #include <iostream>
 
 
+
 namespace {
 
 
@@ -273,7 +274,6 @@ signals:
 	void cardActivated(Game::CardInGameId);
 };
 
-
 static const char * phaseToString(Game::Turn::Phase phase) {
 	if (phase & Game::Turn::UNTAP) return "untap";
 	if (phase & Game::Turn::UPKEEP) return "upkeep";
@@ -289,8 +289,6 @@ static const char * phaseToString(Game::Turn::Phase phase) {
 	if (phase & Game::Turn::CLEANUP) return "cleanup";
 	return "unknown";
 }
-
-
 
 class GameWidget : public QSplitter {
 	Q_OBJECT
@@ -443,3 +441,4 @@ int main(int argc, char ** argv) {
 
 	return app.exec();
 }
+

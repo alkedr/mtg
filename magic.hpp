@@ -5,6 +5,7 @@
 #include <vector>
 
 
+
 // temporary {
 class ECardNotFound : public std::exception {
 public:
@@ -54,8 +55,6 @@ public:
 // }
 
 
-
-
 enum Color : unsigned char {
 	  COLORLESS = 0
 	, WHITE = (1 << 0)
@@ -66,8 +65,6 @@ enum Color : unsigned char {
 
 	, ALL = WHITE | BLUE | BLACK | RED | GREEN
 };
-
-
 
 
 class Game {
@@ -264,9 +261,6 @@ private:
 };
 
 
-
-
-
 class EWrongPosition : public std::exception {
 	const Game::Card::Position position_;
 	const Game::Card::Position possiblePositions_;
@@ -277,3 +271,4 @@ public:
 	Game::Card::Position position() const { return position_; }
 	Game::Card::Position possiblePositions() const { return possiblePositions_; }
 };
+

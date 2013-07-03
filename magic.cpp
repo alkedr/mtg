@@ -265,16 +265,13 @@ public:
 };
 
 
-
-Game::Effect::Effect(CardInGameId source) : source_(source) {}
-Game::Effect::~Effect() {}
-
-void Game::Effect::resolve(Impl & impl)
-{
+Game::Effect::Effect(CardInGameId source) : source_(source) {
+}
+Game::Effect::~Effect() {
+}
+void Game::Effect::resolve(Impl & impl) {
 	onResolve(impl);
 }
-
-
 
 
 
@@ -330,8 +327,6 @@ void Game::Effect::resolve(Impl & impl)
 
 
 
-
-
 EFFECT_BEGIN(AddMana, Game::Effect,
 	(Game::PlayerId, targetPlayerId),
 	(Color, color)
@@ -376,11 +371,8 @@ EFFECT_END
 
 
 
-
-
 Game::Game() : pimpl(new Impl) {
 }
-
 Game::~Game() {
 }
 
@@ -398,33 +390,15 @@ const Game::Turn & Game::turn() const { return pimpl->turn; }
 void Game::start(PlayerId firstPlayer) {
 	pimpl->start(firstPlayer);
 }
-
 void Game::playCardFromHand(PlayerId playerId, CardInGameId cardInGameId) {
 	pimpl->playCardFromHand(playerId, cardInGameId);
 }
-
 void Game::activateAbility(PlayerId playerId, CardInGameId cardInGameId) {
 	pimpl->activateAbility(playerId, cardInGameId);
 }
-
 void Game::pass(PlayerId playerId) {
 	pimpl->pass(playerId);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -501,19 +475,17 @@ public:                                                                         
 
 #define __EFFECT(X) effects.emplace_back(new X);
 
-#define PUSH_EFFECTS(...)                                                              \
-	{                                                                                    \
-		Game::Effects effects;                                                             \
-		MAP(__EFFECT, __VA_ARGS__);                                                        \
-		impl.stack.push_back(std::move(effects));                                          \
-	}
+#define PUSH_EFFECTS(...) {                                                                \
+	Game::Effects effects;                                                                 \
+	MAP(__EFFECT, __VA_ARGS__);                                                            \
+	impl.stack.push_back(std::move(effects));                                              \
+}
 
-#define CHECK_POSITION(VALUE, ALLOWED_VALUES)         \
-	{                                                   \
-		if ((VALUE & ALLOWED_VALUES) == 0) {              \
-			throw EWrongPosition(VALUE, ALLOWED_VALUES);    \
-		}                                                 \
-	}
+#define CHECK_POSITION(VALUE, ALLOWED_VALUES) {                                            \
+	if ((VALUE & ALLOWED_VALUES) == 0) {                                                   \
+		throw EWrongPosition(VALUE, ALLOWED_VALUES);                                       \
+	}                                                                                      \
+}
 
 
 
@@ -521,7 +493,6 @@ class Artifact : public Game::Card {
 public:
 	virtual Type type() const override { return Type::ARTIFACT; }
 };
-
 class Creature : public Game::Card {
 public:
 	typedef short Power;
@@ -546,17 +517,14 @@ public:
 	Creature(Game::PlayerId ownerId)
 	: Card(ownerId) {}
 };
-
 class Enchantment : public Game::Card {
 public:
 	virtual Type type() const override { return Type::ENCHANTMENT; }
 };
-
 class Instant : public Game::Card {
 public:
 	virtual Type type() const override { return Type::INSTANT; }
 };
-
 class Land : public Game::Card {
 public:
 	virtual Type type() const override { return Type::LAND; }
@@ -564,18 +532,14 @@ public:
 	Land(Game::PlayerId ownerId)
 	: Card(ownerId) {}
 };
-
 class Planeswalker : public Game::Card {
 public:
 	virtual Type type() const override { return Type::PLANESWALKER; }
 };
-
 class Sorcery : public Game::Card {
 public:
 	virtual Type type() const override { return Type::SORCERY; }
 };
-
-
 
 template<Color color_> class BasicLand : public Land {
 public:
@@ -643,3 +607,4 @@ static Game::Card * newCardHelper(const Game::Card::Id cardId, Game::PlayerId ow
 std::unique_ptr<Game::Card> Game::newCard(const Game::Card::Id cardId, Game::PlayerId ownerId) {
 	return std::move(std::unique_ptr<Game::Card>(newCardHelper(cardId, ownerId)));
 }
+
