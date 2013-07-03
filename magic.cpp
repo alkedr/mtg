@@ -252,69 +252,103 @@ void Game::Effect::resolve(Impl & impl)
 
 
 
-class AddManaEffect : public Game::Effect {
-	Game::PlayerId targetPlayerId_;
-	Color color_;
-public:
-	AddManaEffect(Game::CardInGameId source, Game::PlayerId targetPlayerId, Color color)
-	 : Game::Effect(source)
-	 , targetPlayerId_(targetPlayerId)
-	 , color_(color)
-	{}
 
-	virtual void onResolve(Game::Impl & impl) {
+#define STRINGIZE(arg)  STRINGIZE1(arg)
+#define STRINGIZE1(arg) STRINGIZE2(arg)
+#define STRINGIZE2(arg) #arg
+
+#define CONCATENATE(arg1, arg2)   CONCATENATE1(arg1, arg2)
+#define CONCATENATE1(arg1, arg2)  CONCATENATE2(arg1, arg2)
+#define CONCATENATE2(arg1, arg2)  arg1##arg2
+
+#define FOR_EACH_1(what, x) what(x)
+#define FOR_EACH_2(what, x, ...)  what(x) FOR_EACH_1(what, __VA_ARGS__)
+#define FOR_EACH_3(what, x, ...)  what(x) FOR_EACH_2(what, __VA_ARGS__)
+#define FOR_EACH_4(what, x, ...)  what(x) FOR_EACH_3(what, __VA_ARGS__)
+#define FOR_EACH_5(what, x, ...)  what(x) FOR_EACH_4(what, __VA_ARGS__)
+#define FOR_EACH_6(what, x, ...)  what(x) FOR_EACH_5(what, __VA_ARGS__)
+#define FOR_EACH_7(what, x, ...)  what(x) FOR_EACH_6(what, __VA_ARGS__)
+#define FOR_EACH_8(what, x, ...)  what(x) FOR_EACH_7(what, __VA_ARGS__)
+
+#define FOR_EACH_NARG(...) FOR_EACH_NARG_(__VA_ARGS__, FOR_EACH_RSEQ_N())
+#define FOR_EACH_NARG_(...) FOR_EACH_ARG_N(__VA_ARGS__)
+#define FOR_EACH_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, N, ...) N
+#define FOR_EACH_RSEQ_N() 8, 7, 6, 5, 4, 3, 2, 1, 0
+
+#define FOR_EACH_(N, what, x, ...) CONCATENATE(FOR_EACH_, N)(what, x, __VA_ARGS__)
+#define FOR_EACH(what, x, ...) FOR_EACH_(FOR_EACH_NARG(x, __VA_ARGS__), what, x, __VA_ARGS__)
+
+
+
+#define __EFFECT_PARAMETER_FIELD(TYPE, NAME) private: TYPE NAME ## _;
+#define __EFFECT_PARAMETER_GETTER(TYPE, NAME) public: TYPE NAME() const { return NAME ## _; }
+#define __EFFECT_PARAMETER_CONSTRUCTOR(TYPE, NAME) , TYPE NAME
+#define __EFFECT_PARAMETER_INITIALIZER(TYPE, NAME) , NAME ## _(NAME)
+#define _EFFECT_PARAMETER_FIELD(ARGS) __EFFECT_PARAMETER_FIELD ARGS
+#define _EFFECT_PARAMETER_GETTER(ARGS) __EFFECT_PARAMETER_GETTER ARGS
+#define _EFFECT_PARAMETER_CONSTRUCTOR(ARGS) __EFFECT_PARAMETER_CONSTRUCTOR ARGS
+#define _EFFECT_PARAMETER_INITIALIZER(ARGS) __EFFECT_PARAMETER_INITIALIZER ARGS
+
+
+#define EFFECT_BEGIN(NAME, PARENT, ...)                                                               \
+	class NAME ## Effect : public PARENT {                                                              \
+		FOR_EACH(_EFFECT_PARAMETER_FIELD, __VA_ARGS__)                                                    \
+	public:                                                                                             \
+		NAME ## Effect(Game::CardInGameId source FOR_EACH(_EFFECT_PARAMETER_CONSTRUCTOR, __VA_ARGS__))    \
+		 : Game::Effect(source) FOR_EACH(_EFFECT_PARAMETER_INITIALIZER, __VA_ARGS__) {}                   \
+		FOR_EACH(_EFFECT_PARAMETER_GETTER, __VA_ARGS__)
+
+#define EFFECT_END };
+
+#define ON_RESOLVE public: virtual void onResolve(Game::Impl & impl) override
+
+
+
+
+
+
+EFFECT_BEGIN(AddMana, Game::Effect,
+	(Game::PlayerId, targetPlayerId),
+	(Color, color)
+)
+	ON_RESOLVE {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		impl.players.at(targetPlayerId_).manaPool.add(color_);
 	}
-};
+EFFECT_END
 
-class TakeManaEffect : public Game::Effect {
-	Game::PlayerId targetPlayerId_;
-	Game::Cost cost_;
-public:
-	TakeManaEffect(Game::CardInGameId source, Game::PlayerId targetPlayerId, Game::Cost cost)
-	 : Game::Effect(source)
-	 , targetPlayerId_(targetPlayerId)
-	 , cost_(cost)
-	{}
-
-	virtual void onResolve(Game::Impl & impl) {
+EFFECT_BEGIN(TakeMana, Game::Effect,
+	(Game::PlayerId, targetPlayerId),
+	(Game::Cost, cost)
+)
+	ON_RESOLVE {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		impl.players.at(targetPlayerId_).manaPool.subtract(cost_);
 	}
-};
+EFFECT_END
 
-class MoveCardEffect : public Game::Effect {
-	Game::CardInGameId targetCardInGameId_;
-	Game::Card::Position position_;
-public:
-	MoveCardEffect(Game::CardInGameId source, Game::CardInGameId targetCardInGameId, Game::Card::Position position)
-	 : Game::Effect(source)
-	 , targetCardInGameId_(targetCardInGameId)
-	 , position_(position)
-	{}
 
-	virtual void onResolve(Game::Impl & impl) {
+EFFECT_BEGIN(MoveCard, Game::Effect,
+	(Game::CardInGameId, targetCardInGameId),
+	(Game::Card::Position, position)
+)
+	ON_RESOLVE {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		impl.cards.at(targetCardInGameId_)->setPosition(position_);
 	}
-};
+EFFECT_END
 
-class SetTapEffect : public Game::Effect {
-	Game::CardInGameId targetCardInGameId_;
-	bool value_;
-public:
-	SetTapEffect(Game::CardInGameId source, Game::CardInGameId targetCardInGameId, bool value)
-	 : Game::Effect(source)
-	 , targetCardInGameId_(targetCardInGameId)
-	 , value_(value)
-	{}
-
-	virtual void onResolve(Game::Impl & impl) {
+EFFECT_BEGIN(SetTap, Game::Effect,
+	(Game::CardInGameId, targetCardInGameId),
+	(bool, value)
+)
+	ON_RESOLVE {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		impl.cards.at(targetCardInGameId_)->setTapped(value_);
+		impl.cards.at(targetCardInGameId_)->setTapped(value());
 	}
-};
+EFFECT_END
+
+
 
 
 
@@ -405,6 +439,7 @@ public:                                                                         
 
 
 
+
 #define EVAL0(...) __VA_ARGS__
 #define EVAL1(...) EVAL0 (EVAL0 (EVAL0 (__VA_ARGS__)))
 #define EVAL2(...) EVAL1 (EVAL1 (EVAL1 (__VA_ARGS__)))
@@ -423,6 +458,7 @@ public:                                                                         
 #define MAP0(f, x, peek, ...) f(x) MAP_NEXT (peek, MAP1) (f, peek, __VA_ARGS__)
 #define MAP1(f, x, peek, ...) f(x) MAP_NEXT (peek, MAP0) (f, peek, __VA_ARGS__)
 #define MAP(f, ...) EVAL (MAP1 (f, __VA_ARGS__, (), 0))
+
 
 
 
