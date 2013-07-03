@@ -117,23 +117,22 @@ public:
 		typedef unsigned short Id;
 
 		enum Type : unsigned char {
-			NONE,
-			ARTIFACT,
-			CREATURE,
-			ENCHANTMENT,
-			INSTANT,
-			LAND,
-			PLANESWALKER,
-			SORCERY
+			ARTIFACT     = 0b00000001,
+			CREATURE     = 0b00000010,
+			ENCHANTMENT  = 0b00000100,
+			INSTANT      = 0b00001000,
+			LAND         = 0b00010000,
+			PLANESWALKER = 0b00100000,
+			SORCERY      = 0b01000000
 		};
 
 		enum Position : unsigned char {
-			LIBRARY,
-			HAND,
-			STACK,
-			BATTLEFIELD,
-			GRAVEYARD,
-			EXILE
+			LIBRARY     = 0b00000001,
+			HAND        = 0b00000010,
+			STACK       = 0b00000100,
+			BATTLEFIELD = 0b00001000,
+			GRAVEYARD   = 0b00010000,
+			EXILE       = 0b00100000
 		};
 
 	protected:
@@ -168,7 +167,7 @@ public:
 		Id id() const { return info().id; }
 		const char * name() const { return info().name; }
 		const char * description() { return info().description; }
-		virtual Type type() const { return Type::NONE; }
+		virtual Type type() const { return (Type)0; }
 
 		virtual const std::string getImageName() const { return std::string("images/") + name() + ".jpg"; }
 
@@ -196,39 +195,20 @@ public:
 
 	class Turn {
 	public:
-		enum Phase : unsigned char {
-			UNTAP,
-			UPKEEP,
-			DRAW_CARD,
-			FIRST_MAIN,
-			COMBAT_BEGIN,
-			COMBAT_ATTACK,
-			COMBAT_BLOCK,
-			COMBAT_DAMAGE,
-			COMBAT_END,
-			SECOND_MAIN,
-			END,
-			CLEANUP
+		enum Phase : unsigned short {
+			UNTAP         = 0b1,
+			UPKEEP        = 0b10,
+			DRAW_CARD     = 0b100,
+			FIRST_MAIN    = 0b1000,
+			COMBAT_BEGIN  = 0b10000,
+			COMBAT_ATTACK = 0b100000,
+			COMBAT_BLOCK  = 0b1000000,
+			COMBAT_DAMAGE = 0b10000000,
+			COMBAT_END    = 0b100000000,
+			SECOND_MAIN   = 0b1000000000,
+			END           = 0b10000000000,
+			CLEANUP       = 0b100000000000
 		};
-
-		static const char * phaseToString(Phase phase) {
-			static const char * s[] = {
-				[UNTAP] = "untap",
-				[UPKEEP] = "upkeep",
-				[DRAW_CARD] = "draw card",
-				[FIRST_MAIN] = "first main",
-				[COMBAT_BEGIN] = "combat begin",
-				[COMBAT_ATTACK] = "combat attack",
-				[COMBAT_BLOCK] = "combat block",
-				[COMBAT_DAMAGE] = "combat damage",
-				[COMBAT_END] = "combat end",
-				[SECOND_MAIN] = "second main",
-				[END] = "end",
-				[CLEANUP] = "cleanup",
-			};
-
-			return s[phase];
-		}
 
 
 		PlayerId activePlayerId;
@@ -243,8 +223,8 @@ public:
 	class Target {
 	public:
 		enum Type {
-			PLAYER,
-			CARD
+			PLAYER = 0b1,
+			CARD   = 0b10
 		};
 
 		Type type;

@@ -1,4 +1,3 @@
-
 #include "magic.hpp"
 
 #include <QtGui>
@@ -273,6 +272,26 @@ public:
 signals:
 	void cardActivated(Game::CardInGameId);
 };
+
+
+static const char * phaseToString(Game::Turn::Phase phase) {
+	if (phase & Game::Turn::UNTAP) return "untap";
+	if (phase & Game::Turn::UPKEEP) return "upkeep";
+	if (phase & Game::Turn::DRAW_CARD) return "draw card";
+	if (phase & Game::Turn::FIRST_MAIN) return "first main";
+	if (phase & Game::Turn::COMBAT_BEGIN) return "combat begin";
+	if (phase & Game::Turn::COMBAT_ATTACK) return "combat attack";
+	if (phase & Game::Turn::COMBAT_BLOCK) return "combat block";
+	if (phase & Game::Turn::COMBAT_DAMAGE) return "combat damage";
+	if (phase & Game::Turn::COMBAT_END) return "combat end";
+	if (phase & Game::Turn::SECOND_MAIN) return "second main";
+	if (phase & Game::Turn::END) return "end";
+	if (phase & Game::Turn::CLEANUP) return "cleanup";
+	return "unknown";
+}
+
+
+
 class GameWidget : public QSplitter {
 	Q_OBJECT
 
@@ -364,7 +383,7 @@ public:
 
 		stackWidget.setCards(game.cards(), stackPredicate);
 
-		phaseLabel.setText(Game::Turn::phaseToString(game.turn().phase));
+		phaseLabel.setText(phaseToString(game.turn().phase));
 	}
 };
 class GameWindow : public QMainWindow {
