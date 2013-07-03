@@ -79,3 +79,7 @@ need a way to determine if two cards are completely equal
 
 
 ScrollBar for CardListWidget
+
+
+
+separate checking and performing actions in effects

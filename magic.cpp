@@ -430,35 +430,37 @@ void Game::pass(PlayerId playerId) {
 
 
 
-
-
 template <Game::Card::Id _id> class CardHelper : public Game::Card {
-
+	static const Info info_;
 public:
-
-	virtual Type type() const override { return Type::LAND; }
-
-	virtual Id id() const override { return _id; }
-	virtual const char * name() const { return "Unknown Card"; }
-	virtual const char * description() const { return "Unknown"; }
-
-	virtual const std::string getImageName() const { return ""; }   // FIXME: image for unknown card
-
-	virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) override {}
+	virtual const Info & info() const {
+		return info_;
+	}
 
 	CardHelper(Game::PlayerId ownerId)
 	: Card(ownerId) {}
+};
+
+template<Game::Card::Id _id> const Game::Card::Info CardHelper<_id>::info_ {
+	.id = _id,
+	.name = "Unknown Card",
+	.description = "Unknown"
 };
 
 
 #define CARD_BEGIN(BASE, ID, NAME, DESCRIPTION)                                                              \
 template<> class CardHelper<ID> : public BASE {                                                              \
 public:                                                                                                      \
-	CardHelper<ID>(Game::PlayerId & ownerId)                                                                   \
+	CardHelper<ID>(Game::PlayerId ownerId)                                                                     \
 	: BASE(ownerId) {}                                                                                         \
-	GETTER_TYPE_SIMPLE(Id, id, ID)                                                                             \
-	GETTER_TYPE_SIMPLE(const char *, name, NAME)                                                               \
-	GETTER_TYPE_SIMPLE(const char *, description, DESCRIPTION)
+	virtual const Info & info() const override {                                                               \
+		static Info info_ {                                                                                      \
+			.id = ID,                                                                                              \
+			.name = NAME,                                                                                          \
+			.description = DESCRIPTION                                                                             \
+		};                                                                                                       \
+		return info_;                                                                                            \
+	}
 
 #define CARD_END  };
 

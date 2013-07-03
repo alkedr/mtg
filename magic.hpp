@@ -117,6 +117,7 @@ public:
 		typedef unsigned short Id;
 
 		enum Type : unsigned char {
+			NONE,
 			ARTIFACT,
 			CREATURE,
 			ENCHANTMENT,
@@ -134,6 +135,14 @@ public:
 			GRAVEYARD,
 			EXILE
 		};
+
+	protected:
+		struct Info {
+			Id id;
+			const char * name;
+			const char * description;
+		};
+		virtual const Info & info() const = 0;
 
 	private:
 		PlayerId ownerId_;
@@ -155,27 +164,18 @@ public:
 		void tap() { tapped_ = true; }
 		void untap() { tapped_ = false; }
 
-		// specific for card type
 
-		// specific for card
-		virtual Id id() const = 0;
-		virtual const char * name() const = 0;
-		virtual const char * description() const = 0;
-		virtual Type type() const = 0;
+		Id id() const { return info().id; }
+		const char * name() const { return info().name; }
+		const char * description() { return info().description; }
+		virtual Type type() const { return Type::NONE; }
 
-		virtual const std::string getImageName() const {
-			return std::string("images/") + name() + ".jpg";
-		}
+		virtual const std::string getImageName() const { return std::string("images/") + name() + ".jpg"; }
 
-		virtual Color color() const { return Color::COLORLESS; }
+		virtual Color color() const { return Color::COLORLESS; }  // TODO: get colors from cost
 
-		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) = 0;
-		virtual void activateAbility(Impl & impl, CardInGameId myInGameId) {/* throw "card doesn't have abilities";*/}
-
-		virtual void beforeTap() {}
-		virtual void afterTap() {}
-		virtual void beforeUntap() {}
-		virtual void afterUntap() {}
+		virtual void playFromHand(Game::Impl & impl, Game::CardInGameId myInGameId) {}
+		virtual void activateAbility(Impl & impl, CardInGameId myInGameId) {}
 
 	};
 

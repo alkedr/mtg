@@ -1,4 +1,4 @@
-RELEASE := n
+RELEASE := y
 BUILD_DIR := build
 
 CXX := clang++ -std=c++11
@@ -74,6 +74,10 @@ $(BUILD_DIR)/server: $(server_OBJECTS) Makefile
 $(BUILD_DIR)/client: $(client_OBJECTS) Makefile
 	@echo "LINK    $@"
 	@$(CXX) $(client_FLAGS) $(client_LIBS) $(client_OBJECTS) -o $@
+ifeq ($(RELEASE), y)
+	@echo "PACK    $@"
+	@$(PACK) $@
+endif
 
 $(BUILD_DIR)/unit_tests: $(test_OBJECTS) Makefile
 	@echo "LINK    $@"

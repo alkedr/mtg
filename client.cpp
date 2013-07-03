@@ -33,12 +33,8 @@ public:
 		}
 	}
 
-	void setHighlightColor(QColor c) {
-		highlightColor_ = c;
-	}
-	QColor highlightColor() const {
-		return highlightColor_;
-	}
+	void setHighlightColor(QColor c) { highlightColor_ = c; }
+	QColor highlightColor() const { return highlightColor_; }
 
 	void mousePressEvent(QMouseEvent * event) override {
 		std::cout << "w: " << width() << " h:" << height() << std::endl;
