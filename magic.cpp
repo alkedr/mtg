@@ -62,6 +62,22 @@ public:
 	std::vector<Attack> attackers;
 	std::vector<Block> blockers;
 
+	Impl() {}
+	Impl(const Impl & other)
+	: turn(other.turn)
+	, players(other.players)
+	, maxLandsPerTurn_(other.maxLandsPerTurn_)
+	, landsPlayedThisTurn_(other.landsPlayedThisTurn_)
+	, attackers(other.attackers)
+	, blockers(other.blockers)
+	{
+		for (const auto & pCard : other.cards) cards.emplace_back(pCard->clone());
+		for (const auto & pEffect : other.effects) effects.emplace_back(pEffect->clone());
+		for (const auto & effectsOnStack : other.stack) {
+			stack.emplace_back();
+			for (const auto & pEffect : effectsOnStack) stack.back().emplace_back(pEffect->clone());
+		}
+	}
 
 	bool allPlayersPassed() const {
 		return std::all_of(
@@ -318,7 +334,8 @@ void Game::Effect::resolve(Impl & impl) {
 	public:                                                                                             \
 		NAME ## Effect(Game::CardInGameId source FOR_EACH(_EFFECT_PARAMETER_CONSTRUCTOR, __VA_ARGS__))    \
 		 : Game::Effect(source) FOR_EACH(_EFFECT_PARAMETER_INITIALIZER, __VA_ARGS__) {}                   \
-		FOR_EACH(_EFFECT_PARAMETER_GETTER, __VA_ARGS__)
+		FOR_EACH(_EFFECT_PARAMETER_GETTER, __VA_ARGS__)                                                   \
+		virtual Effect * clone() const override { return new NAME ## Effect(*this); }
 
 #define EFFECT_END };
 
@@ -373,6 +390,8 @@ EFFECT_END
 
 Game::Game() : pimpl(new Impl) {
 }
+Game::Game(const Game & other) : pimpl(new Impl(*other.pimpl)) {
+}
 Game::~Game() {
 }
 
@@ -413,6 +432,8 @@ public:
 
 	CardHelper(Game::PlayerId ownerId)
 	: Card(ownerId) {}
+
+	virtual Card * clone() const override { return new CardHelper<_id>(*this); }
 };
 
 template<Game::Card::Id _id> const Game::Card::Info CardHelper<_id>::info_ {
@@ -434,7 +455,8 @@ public:                                                                         
 			.description = DESCRIPTION                                                                             \
 		};                                                                                                       \
 		return info_;                                                                                            \
-	}
+	}                                                                                                          \
+	virtual Card * clone() const override { return new CardHelper<ID>(*this); }
 
 #define CARD_END  };
 

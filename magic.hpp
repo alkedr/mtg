@@ -94,6 +94,8 @@ public:
 		Effect(CardInGameId source);
 		virtual ~Effect();
 
+		virtual Effect * clone() const = 0;
+
 		CardInGameId source() const;
 
 		void resolve(Impl & impl);
@@ -154,6 +156,7 @@ public:
 		Card(PlayerId ownerId) : ownerId_(ownerId), tapped_(false) {
 		}
 		virtual ~Card() {}
+		virtual Card * clone() const = 0;
 
 		bool tapped() const { return tapped_; }
 		void setTapped(bool value) { tapped_ = value; }
@@ -236,6 +239,7 @@ public:
 public:
 
 	Game();
+	Game(const Game & other);
 	~Game();
 
 	Player & player(PlayerId id);
