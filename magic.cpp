@@ -56,9 +56,6 @@ public:
 	Stack stack;
 	Effects effects;
 
-	unsigned char maxLandsPerTurn_ = 1;     // TODO: remove
-	unsigned char landsPlayedThisTurn_ = 0; // TODO: remove
-
 	std::vector<Attack> attackers;
 	std::vector<Block> blockers;
 
@@ -66,8 +63,6 @@ public:
 	Impl(const Impl & other)
 	: turn(other.turn)
 	, players_(other.players_)
-	, maxLandsPerTurn_(other.maxLandsPerTurn_)
-	, landsPlayedThisTurn_(other.landsPlayedThisTurn_)
 	, attackers(other.attackers)
 	, blockers(other.blockers)
 	{
@@ -102,17 +97,17 @@ public:
 	void startPhase(Turn::Phase phase) {
 		switch (phase) {
 			case (Turn::Phase::UNTAP): {
-				for (std::unique_ptr<Card> & pCard : cards) {
+				/*for (std::unique_ptr<Card> & pCard : cards) {
 					if (pCard->ownerId() == turn.activePlayerId) pCard->untap();
 				}
-				goToNextPhase();
+				goToNextPhase();*/
 				break;
 			}
 			case (Turn::Phase::UPKEEP): {
 				break;
 			}
 			case (Turn::Phase::DRAW_CARD): {
-				drawCard(turn.activePlayerId);
+				//drawCard(turn.activePlayerId);
 				break;
 			}
 			case (Turn::Phase::FIRST_MAIN): {
@@ -181,7 +176,6 @@ public:
 				break;
 			}
 			case (Turn::Phase::CLEANUP): {
-				landsPlayedThisTurn_ = 0;
 				break;
 			}
 		}
@@ -192,7 +186,7 @@ public:
 		turn.phase = (Turn::Phase)((int)turn.phase << 1);
 		if (turn.phase > Turn::Phase::CLEANUP) {
 			turn.phase = Turn::Phase::UNTAP;
-			turn.activePlayerId = 1 - turn.activePlayerId;
+			turn.activePlayerId = 3 - turn.activePlayerId;
 			turn.priorityPlayerId = turn.activePlayerId;
 		}
 		startPhase(turn.phase);
@@ -238,6 +232,7 @@ public:
 
 	void playCardFromHand(PlayerId playerId, CardInGameId cardInGameId) {
 		if (cards.at(cardInGameId)->ownerId() != playerId) throw EWrongCardOwner();
+		if (cards.at(cardInGameId)->position() != Card::Position::HAND) throw EWrongZone();
 		cards.at(cardInGameId)->playFromHand(*this, cardInGameId);
 		clearPlayerPassFlag();
 	}

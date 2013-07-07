@@ -9,13 +9,29 @@ class GameTest : public ::testing::Test {
 protected:
 
 	void allPass() {
-		game.pass(1);
-		game.pass(2);
-		/*for (Game::PlayerId playerId = 1; playerId <= game.players().size(); playerId++) {
-			game.pass(playerId);
-		}*/
+		Game::Turn::Phase phase = game.turn().phase;
+		while (game.turn().phase == phase) {
+			game.pass(game.turn().priorityPlayerId);
+		}
+	}
+	
+	void allPassUntilPhase(Game::Turn::Phase phase) {
+		while (game.turn().phase != phase) {
+			allPass();
+		}
 	}
 
+	void allPassUntilNextTurn() {
+		allPass();
+		allPassUntilPhase(Game::Turn::Phase::UNTAP);
+	}
+
+
+	void checkEverything() {
+		checkCards();
+		checkTurn();
+		checkPlayers();
+	}
 
 
 	struct Player {
@@ -29,12 +45,16 @@ protected:
 	void playerChanged(Game::PlayerId id, struct Player player) {
 		Player & p = players[id];
 		if (!player.name.empty()) p.name = player.name;
-
-		p.check(game.player(id));
+		checkPlayers();
 	}
 
 	void playersChanged(std::vector<std::pair<Game::PlayerId, Player>> v) {
 		for (const auto & pair : v) playerChanged(pair.first, pair.second);
+		checkPlayers();
+	}
+
+	void checkPlayers() {
+		for (const auto & pair : players) pair.second.check(game.player(pair.first));
 	}
 
 
@@ -55,12 +75,16 @@ protected:
 		if (card.id != 0) c.id = card.id;
 		if (card.ownerId != 0) c.ownerId = card.ownerId;
 		if (card.position != 0) c.position = card.position;
-
-		c.check(game.card(id));
+		checkCards();
 	}
 
 	void cardsChanged(std::vector<std::pair<Game::CardInGameId, Card>> v) {
 		for (const auto & pair : v) cardChanged(pair.first, pair.second);
+		checkCards();
+	}
+
+	void checkCards() {
+		for (const auto & pair : cards) pair.second.check(game.card(pair.first));
 	}
 
 	struct Turn {
@@ -77,7 +101,10 @@ protected:
 
 	void turnChanged(Turn data) {
 		if (data.phase != 0) turn.phase = data.phase;
+		checkTurn();
+	}
 
+	void checkTurn() {
 		turn.check(game.turn());
 	}
 
@@ -128,8 +155,31 @@ TEST_F(GameTest, GrizzlyBears) {
 
 
 	// turn 1, player 1
-	
-	
+	allPassUntilPhase(Game::Turn::Phase::FIRST_MAIN);
+	turnChanged({ .activePlayerId = player1Id, .priorityPlayerId = player1Id, .phase = Game::Turn::Phase::FIRST_MAIN });
+
+	// play forest
+	game.playCardFromHand(player1Id, 4);
+	cardChanged(4, { .position = Game::Card::Position::BATTLEFIELD });
+
+	allPassUntilNextTurn();
+
+
+	// turn 1, player 2
+	allPassUntilPhase(Game::Turn::Phase::FIRST_MAIN);
+	turnChanged({ .activePlayerId = player2Id, .priorityPlayerId = player2Id, .phase = Game::Turn::Phase::FIRST_MAIN });
+
+	// play plains
+	game.playCardFromHand(player2Id, 8);
+	cardChanged(8, { .position = Game::Card::Position::BATTLEFIELD });
+
+	// try to play same land (plains) twice
+	EXPECT_THROW( game.playCardFromHand(player2Id, 8), EWrongZone );
+	checkEverything();
+
+	// try to play second land (island)
+	EXPECT_THROW( game.playCardFromHand(player2Id, 9), ETooMuchLandsPerTurn ) << "played second land";
+	checkEverything();
 }
 
 

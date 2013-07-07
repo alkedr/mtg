@@ -207,7 +207,7 @@ public:
 	void set(const Game & game, Game::PlayerId forPlayer) {
 		std::cout << __PRETTY_FUNCTION__ << "  " << (int)forPlayer << std::endl;
 
-		nameLabel.setText(QString("Player ") + QString::number(forPlayer+1));
+		nameLabel.setText(QString::fromUtf8(game.player(forPlayer).name.c_str()));
 		hpLabel.setText(QString("HP: ") + QString::number(game.player(forPlayer).hp));
 
 		static auto handPredicate =
@@ -377,7 +377,7 @@ public:
 		myHandWidget.setCards(game.cards(), handPredicate);
 
 		myTeamWidget.set(game, forPlayer);
-		enemyTeamWidget.set(game, 1-forPlayer);
+		enemyTeamWidget.set(game, 3-forPlayer);
 
 		stackWidget.setCards(game.cards(), stackPredicate);
 
@@ -408,13 +408,12 @@ int main(int argc, char ** argv) {
 
 	Game game;
 
-	game.players().emplace_back();
-	game.players().emplace_back();
-	game.player(0).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 };
-	game.player(1).library = { 1, 2, 3, 4, 5, 6, 1, 1, 1 };
-	game.start(0);
+	game.addPlayer("Player1", { 1, 2, 3, 4, 5, 6, 1, 1, 1 });
+	game.addPlayer("Player2", { 1, 2, 3, 4, 5, 6, 1, 1, 1 });
 
-	GameWindow gameWindow(game, 0);
+	game.start(1);
+
+	GameWindow gameWindow(game, 1);
 	gameWindow.show();
 
 	/*MainMenuWindow mainMenuWindow;
