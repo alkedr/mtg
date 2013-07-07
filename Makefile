@@ -1,4 +1,4 @@
-RELEASE := y
+RELEASE := n
 BUILD_DIR := build
 
 CXX := clang++ -std=c++11
@@ -15,7 +15,7 @@ ifeq ($(RELEASE), y)
 	ai_BUILD_TYPE_FLAGS := -O3
 	test_BUILD_TYPE_FLAGS := -O0
 else
-	magic_BUILD_TYPE_FLAGS := -O0 -Weverything -Wno-unused-parameter -Wno-unused-macros -Wno-unused-member-function -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-undefined-reinterpret-cast
+	magic_BUILD_TYPE_FLAGS := -O0 -Weverything -Wno-unused-parameter -Wno-unused-macros -Wno-unused-member-function -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-undefined-reinterpret-cast -Wno-c++1y-extensions
 	server_BUILD_TYPE_FLAGS :=
 	client_BUILD_TYPE_FLAGS :=
 	ai_BUILD_TYPE_FLAGS :=
@@ -48,7 +48,8 @@ ai_LIBS  := $(magic_LIBS)
 test_HEADERS := $(magic_HEADERS)
 test_SOURCES := $(magic_SOURCES) test.cpp
 test_OBJECTS := $(BUILD_DIR)/test.o $(magic_OBJECTS)
-test_FLAGS := $(magic_FLAGS) $(test_BUILD_TYPE_FLAGS)
+test_FLAGS := $(magic_FLAGS) $(test_BUILD_TYPE_FLAGS) -frtti
+test_LIBS := -lgtest
 
 .PHONY : all clean
 

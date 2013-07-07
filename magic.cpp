@@ -51,7 +51,7 @@ public:
 
 
 	Turn turn;
-	std::vector<Player> players;    // TODO: vector<unique_ptr>  or const
+	std::vector<Player> players_;    // TODO: vector<unique_ptr>  or const
 	std::vector<std::unique_ptr<Card>> cards;  // all cards_ allocated here,  CardInGameId - index in this vector  DO NOT ERASE! DO NOT FREE! DO NOT NULL!
 	Stack stack;
 	Effects effects;
@@ -65,7 +65,7 @@ public:
 	Impl() {}
 	Impl(const Impl & other)
 	: turn(other.turn)
-	, players(other.players)
+	, players_(other.players_)
 	, maxLandsPerTurn_(other.maxLandsPerTurn_)
 	, landsPlayedThisTurn_(other.landsPlayedThisTurn_)
 	, attackers(other.attackers)
@@ -79,10 +79,20 @@ public:
 		}
 	}
 
+	
+	Player & player(PlayerId id) { return players_.at(id-1); }
+	const Player & player(PlayerId id) const { return players_.at(id-1); }
+
+
+	PlayerId addPlayer(std::string name, std::vector<Card::Id> library) {
+		players_.emplace_back(name, library);
+		return (PlayerId)players_.size();
+	}
+
 	bool allPlayersPassed() const {
 		return std::all_of(
-			std::begin(players),
-			std::end(players),
+			std::begin(players_),
+			std::end(players_),
 			[&](const Player & p) {
 				return p.passed;
 			}
@@ -179,7 +189,7 @@ public:
 
 	void goToNextPhase() {
 		endPhase(turn.phase);
-		turn.phase = (Turn::Phase)((int)turn.phase + 1);
+		turn.phase = (Turn::Phase)((int)turn.phase << 1);
 		if (turn.phase > Turn::Phase::CLEANUP) {
 			turn.phase = Turn::Phase::UNTAP;
 			turn.activePlayerId = 1 - turn.activePlayerId;
@@ -189,22 +199,22 @@ public:
 	}
 
 	void lose(PlayerId playerId) {
-		players.at(playerId).loser = true;
+		player(playerId).loser = true;
 	}
 
 	void drawCard(PlayerId playerId) {
-		if (players.at(playerId).library.empty()) {
+		if (player(playerId).library.empty()) {
 			lose(playerId);
 		} else {
-			Card::Id cardId = players.at(playerId).library.back();
-			players.at(playerId).library.pop_back();
+			Card::Id cardId = player(playerId).library.back();
+			player(playerId).library.pop_back();
 			cards.push_back( newCard(cardId, playerId) );
 			cards.back()->setPosition(Card::Position::HAND);
 		}
 	}
 
 	void clearPlayerPassFlag() {
-		for (Player & player : players) player.passed = false;
+		for (Player & player : players_) player.passed = false;
 	}
 
 	void addEffect(std::unique_ptr<Effect> pEffect) {
@@ -220,29 +230,27 @@ public:
 
 	void start(PlayerId firstPlayer) {
 		turn.activePlayerId = firstPlayer;
-		for (PlayerId i = 0; i < players.size(); i++) {
+		turn.priorityPlayerId = turn.activePlayerId;
+		for (PlayerId i = 1; i <= players_.size(); i++) {
 			for (int j = 0; j < 7; j++) drawCard(i);
 		}
 	}
 
 	void playCardFromHand(PlayerId playerId, CardInGameId cardInGameId) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (cards.at(cardInGameId)->ownerId() != playerId) throw EWrongCardOwner();
 		cards.at(cardInGameId)->playFromHand(*this, cardInGameId);
 		clearPlayerPassFlag();
 	}
 
 	void activateAbility(PlayerId playerId, CardInGameId cardInGameId) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (cards.at(cardInGameId)->ownerId() != playerId) throw EWrongCardOwner();
 		cards.at(cardInGameId)->activateAbility(*this, cardInGameId);
 		clearPlayerPassFlag();
 	}
 
 	void pass(PlayerId playerId) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
-		players.at(playerId).passed = true;
+		player(playerId).passed = true;
 		if (allPlayersPassed()) {
 			if (stack.empty()) {
 				goToNextPhase();
@@ -253,12 +261,11 @@ public:
 			clearPlayerPassFlag();
 			turn.priorityPlayerId = turn.activePlayerId;
 		} else {
-			turn.priorityPlayerId = 1 - turn.priorityPlayerId;
+			turn.priorityPlayerId = 3 - turn.priorityPlayerId;
 		}
 	}
 
 	void declareAttacker(PlayerId playerId, CardInGameId cardInGameId, Target target) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (turn.activePlayerId != playerId) throw ENotYourTurn();
 		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
 		if (turn.phase != Turn::Phase::COMBAT_ATTACK) throw EWrongPhase();
@@ -268,7 +275,6 @@ public:
 	}
 
 	void declareBlocker(PlayerId playerId, CardInGameId cardInGameId, Target target) {
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		if (turn.activePlayerId != playerId) throw ENotYourTurn();
 		if (turn.priorityPlayerId != playerId) throw ENotYourPriority();
 		if (turn.phase != Turn::Phase::COMBAT_BLOCK) throw EWrongPhase();
@@ -350,7 +356,7 @@ EFFECT_BEGIN(AddMana, Game::Effect,
 )
 	ON_RESOLVE {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		impl.players.at(targetPlayerId_).manaPool.add(color_);
+		impl.player(targetPlayerId_).manaPool.add(color_);
 	}
 EFFECT_END
 
@@ -360,7 +366,7 @@ EFFECT_BEGIN(TakeMana, Game::Effect,
 )
 	ON_RESOLVE {
 		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		impl.players.at(targetPlayerId_).manaPool.subtract(cost_);
+		impl.player(targetPlayerId_).manaPool.subtract(cost_);
 	}
 EFFECT_END
 
@@ -395,9 +401,10 @@ Game::Game(const Game & other) : pimpl(new Impl(*other.pimpl)) {
 Game::~Game() {
 }
 
-Game::Player & Game::player(PlayerId id) { return pimpl->players.at(id); }
-const Game::Player & Game::player(PlayerId id) const { return pimpl->players.at(id); }
-std::vector<Game::Player> & Game::players() { return pimpl->players; }
+Game::Player & Game::player(PlayerId id) { return pimpl->player(id); }
+const Game::Player & Game::player(PlayerId id) const { return pimpl->player(id); }
+std::vector<Game::Player> & Game::players() { return pimpl->players_; }
+const std::vector<Game::Player> & Game::players() const { return pimpl->players_; }
 
 Game::Card & Game::card(CardInGameId cardInGameId) { return *pimpl->cards.at(cardInGameId); }
 std::vector<std::unique_ptr<Game::Card>> & Game::cards() { return pimpl->cards; }
@@ -405,6 +412,10 @@ const std::vector<std::unique_ptr<Game::Card>> & Game::cards() const { return pi
 
 Game::Turn & Game::turn() { return pimpl->turn; }
 const Game::Turn & Game::turn() const { return pimpl->turn; }
+
+Game::PlayerId Game::addPlayer(std::string name, std::vector<Card::Id> library) {
+	return pimpl->addPlayer(name, library);
+}
 
 void Game::start(PlayerId firstPlayer) {
 	pimpl->start(firstPlayer);

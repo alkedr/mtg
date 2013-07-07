@@ -182,13 +182,14 @@ public:
 	public:
 		typedef unsigned short HP;
 
+		std::string name;
 		std::vector<Card::Id> library;
 		ManaPool manaPool;
 		HP hp;
 		bool passed;
 		bool loser;
 
-		Player() : hp(20), passed(false), loser(false) {}
+		Player(std::string name_ = "", std::vector<Card::Id> library_ = {}) : name(name_), library(library_), hp(20), passed(false), loser(false) {}
 	};
 
 	typedef std::vector<Effects> Stack;
@@ -216,7 +217,7 @@ public:
 		Phase phase;
 		// TODO: history
 
-		Turn() : activePlayerId(0), priorityPlayerId(0), phase(FIRST_MAIN) {   // FIXME: phase(UNTAP)
+		Turn() : activePlayerId(0), priorityPlayerId(0), phase(UNTAP) {
 		}
 	};
 
@@ -245,6 +246,7 @@ public:
 	Player & player(PlayerId id);
 	const Player & player(PlayerId id) const;
 	std::vector<Player> & players();
+	const std::vector<Player> & players() const;
 
 	Card & card(CardInGameId cardInGameId);
 	std::vector<std::unique_ptr<Card>> & cards();
@@ -252,6 +254,8 @@ public:
 
 	Turn & turn();
 	const Turn & turn() const;
+
+	PlayerId addPlayer(std::string name, std::vector<Card::Id> library);
 
 	void start(PlayerId firstPlayer);
 
