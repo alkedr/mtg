@@ -14,14 +14,13 @@ class Session {
 	char data_[max_length];
 
 
-	void handle_read(const boost::system::error_code & error, size_t bytes_transferred)
-	{
+	void handle_read(const boost::system::error_code & error, size_t bytes_transferred) {
 		if (!error) {
 			std::cout << __FUNCTION__ << std::endl;
-  			boost::asio::async_write(
+			boost::asio::async_write(
 				socket_,
-      			boost::asio::buffer(data_, bytes_transferred),
-      			boost::bind(
+						boost::asio::buffer(data_, bytes_transferred),
+						boost::bind(
 					&Session::handle_write,
 					this,
 					boost::asio::placeholders::error
@@ -32,11 +31,10 @@ class Session {
 		}
 	}
 
-	void handle_write(const boost::system::error_code & error)
-	{
+	void handle_write(const boost::system::error_code & error) {
 		if (!error) {
 			std::cout << __FUNCTION__ << std::endl;
-  			socket_.async_read_some(
+  		socket_.async_read_some(
 				boost::asio::buffer(data_, max_length),
 				boost::bind(
 					&Session::handle_read,
@@ -50,25 +48,19 @@ class Session {
 		}
 	}
 public:
-	Session(boost::asio::io_service & io_service)
-	 : socket_(io_service)
-	{
+	Session(boost::asio::io_service & io_service) : socket_(io_service) {
 	}
 
-	boost::asio::ip::tcp::socket & socket()
-	{
-		return socket_;
-	}
+	boost::asio::ip::tcp::socket & socket() { return socket_; }
 
-	void start()
-	{
+	void start() {
 		socket_.async_read_some(
 			boost::asio::buffer(data_, max_length),
     		boost::bind(
 				&Session::handle_read,
 				this,
-      			boost::asio::placeholders::error,
-      			boost::asio::placeholders::bytes_transferred
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred
 			)
 		);
 	}

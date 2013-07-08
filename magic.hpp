@@ -262,6 +262,8 @@ public:
 	// actions of player
 	void playCardFromHand(PlayerId playerId, CardInGameId cardInGameId);
 	void activateAbility(PlayerId playerId, CardInGameId cardInGameId);
+	void declareAttacker(Game::CardInGameId attacker, Game::Target target);
+	void declareBlocker(Game::CardInGameId blocker, Game::CardInGameId attacker);
 	void pass(PlayerId playerId);
 
 private:

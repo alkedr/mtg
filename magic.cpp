@@ -421,6 +421,10 @@ void Game::playCardFromHand(PlayerId playerId, CardInGameId cardInGameId) {
 void Game::activateAbility(PlayerId playerId, CardInGameId cardInGameId) {
 	pimpl->activateAbility(playerId, cardInGameId);
 }
+void Game::declareAttacker(Game::CardInGameId attacker, Game::Target target) {
+}
+void Game::declareBlocker(Game::CardInGameId blocker, Game::CardInGameId attacker) {
+}
 void Game::pass(PlayerId playerId) {
 	pimpl->pass(playerId);
 }

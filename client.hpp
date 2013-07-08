@@ -1,26 +1,34 @@
+#pragma once
+
 #include "magic.hpp"
 
+#include <memory>
 
-class Client : private Game {
+
+class Client {
 public:
 
 	Client(std::string host, unsigned short port);
+	virtual ~Client();
 	
-	//const Game & game() const { return game_; }
-
-	const Player & player(PlayerId id) const { return Game::player(id); }
-	const std::vector<Player> & players() const { return Game::players(); }
-
-	const std::vector<std::unique_ptr<Card>> & cards() const { return Game::cards(); }
-
-	const Turn & turn() const { return Game::turn(); }
+	const Game & game() const;
+	Game::PlayerId myId() const;
 
 	// actions of player
-	void untapCard();
-	void playCardFromHand(CardInGameId cardInGameId);
-	void activateAbility(CardInGameId cardInGameId);
+	void untapCard(Game::CardInGameId cardInGameId);
+	void playCardFromHand(Game::CardInGameId cardInGameId);
+	void activateAbility(Game::CardInGameId cardInGameId);
+	void declareAttacker(Game::CardInGameId attacker, Game::Target target);
+	void declareBlocker(Game::CardInGameId blocker, Game::CardInGameId attacker);
 	void pass();
 
+protected:
 	virtual void onPriority() {}
+
+private:
+	void onUpdate();
+
+	class Impl;
+	std::unique_ptr<Impl> pimpl;
 };
 
